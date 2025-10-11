@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
+import { AIChat } from "./AIChat";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -12,6 +13,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <main className="ml-64 p-8">
         {children}
       </main>
+      <AIChat />
     </div>
   );
 };
