@@ -1,4 +1,4 @@
-import { Home, CheckSquare, Heart, MessageCircle, BarChart3, User, Brain } from "lucide-react";
+import { Home, CheckSquare, Heart, MessageCircle, BarChart3, User, Brain, Image } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import logo from "@/assets/logo-mindmate.png";
 
@@ -8,6 +8,7 @@ const navigation = [
   { name: "Habits", href: "/habits", icon: Heart },
   { name: "Reflections", href: "/reflections", icon: MessageCircle },
   { name: "Insights", href: "/insights", icon: BarChart3 },
+  { name: "Photos", href: "/photos", icon: Image },
   { name: "Profile", href: "/profile", icon: User },
 ];
 

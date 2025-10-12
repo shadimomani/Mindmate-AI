@@ -8,6 +8,7 @@ import DailyPlanner from "./pages/DailyPlanner";
 import Habits from "./pages/Habits";
 import Reflections from "./pages/Reflections";
 import Insights from "./pages/Insights";
+import Photos from "./pages/Photos";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/habits" element={<Habits />} />
           <Route path="/reflections" element={<Reflections />} />
           <Route path="/insights" element={<Insights />} />
+          <Route path="/photos" element={<Photos />} />
           <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
