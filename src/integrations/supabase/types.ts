@@ -14,7 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      habits: {
+        Row: {
+          completed_today: boolean
+          created_at: string
+          description: string | null
+          frequency: string | null
+          id: string
+          last_completed_at: string | null
+          name: string
+          streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_today?: boolean
+          created_at?: string
+          description?: string | null
+          frequency?: string | null
+          id?: string
+          last_completed_at?: string | null
+          name: string
+          streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_today?: boolean
+          created_at?: string
+          description?: string | null
+          frequency?: string | null
+          id?: string
+          last_completed_at?: string | null
+          name?: string
+          streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mood_entries: {
+        Row: {
+          created_at: string
+          id: string
+          mood_label: string
+          mood_value: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mood_label: string
+          mood_value: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mood_label?: string
+          mood_value?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      photos: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          id: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reflections: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          question: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          question: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          question?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          priority: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          priority?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          priority?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

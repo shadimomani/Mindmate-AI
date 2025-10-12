@@ -1,32 +1,92 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Circle, CheckCircle2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { taskSchema } from "@/lib/validation";
 
 interface Task {
-  id: number;
-  text: string;
+  id: string;
+  title: string;
   completed: boolean;
 }
 
 export const TaskList = () => {
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: 1, text: "Review morning emails", completed: true },
-    { id: 2, text: "Complete project proposal", completed: false },
-    { id: 3, text: "30-minute meditation", completed: false },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  const toggleTask = (id: number) => {
-    setTasks(tasks.map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+  useEffect(() => {
+    if (user) {
+      loadTasks();
+    }
+  }, [user]);
+
+  const loadTasks = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setTasks(data);
+    }
   };
 
-  const addTask = () => {
-    if (newTask.trim()) {
-      setTasks([...tasks, { id: Date.now(), text: newTask, completed: false }]);
+  const toggleTask = async (id: string, completed: boolean) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ completed: !completed })
+      .eq('id', id);
+
+    if (!error) {
+      setTasks(tasks.map(task => 
+        task.id === id ? { ...task, completed: !completed } : task
+      ));
+    }
+  };
+
+  const addTask = async () => {
+    if (!user || !newTask.trim()) return;
+
+    try {
+      const validation = taskSchema.safeParse({ title: newTask });
+
+      if (!validation.success) {
+        toast({
+          title: 'Validation Error',
+          description: validation.error.errors[0].message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({ user_id: user.id, title: newTask, completed: false })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTasks([data, ...tasks]);
       setNewTask("");
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to add task',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,7 +99,7 @@ export const TaskList = () => {
           <div
             key={task.id}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-base cursor-pointer"
-            onClick={() => toggleTask(task.id)}
+            onClick={() => toggleTask(task.id, task.completed)}
           >
             {task.completed ? (
               <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
@@ -47,10 +107,15 @@ export const TaskList = () => {
               <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             )}
             <span className={`font-sans ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-              {task.text}
+              {task.title}
             </span>
           </div>
         ))}
+        {tasks.length === 0 && (
+          <p className="text-center text-muted-foreground py-4 text-sm">
+            No tasks yet. Add your first task below!
+          </p>
+        )}
       </div>
 
       <div className="flex gap-2">
@@ -59,9 +124,15 @@ export const TaskList = () => {
           onChange={(e) => setNewTask(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && addTask()}
           placeholder="Add a new task..."
+          maxLength={200}
           className="flex-1"
         />
-        <Button onClick={addTask} size="icon" className="bg-accent hover:bg-accent/90">
+        <Button 
+          onClick={addTask} 
+          size="icon" 
+          disabled={loading || !newTask.trim()}
+          className="bg-accent hover:bg-accent/90"
+        >
           <Plus className="w-5 h-5" />
         </Button>
       </div>

@@ -1,5 +1,7 @@
-import { Home, CheckSquare, Heart, MessageCircle, BarChart3, User, Brain, Image } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Home, CheckSquare, Heart, MessageCircle, BarChart3, User, Brain, Image, LogOut } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo-mindmate.png";
 
 const navigation = [
@@ -13,6 +15,22 @@ const navigation = [
 ];
 
 export const Sidebar = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out',
+        variant: 'destructive',
+      });
+    } else {
+      navigate('/auth');
+    }
+  };
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col shadow-soft">
       <div className="p-6 border-b border-border">
@@ -43,7 +61,7 @@ export const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border space-y-2">
         <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted">
           <Brain className="w-5 h-5 text-accent" />
           <div className="flex-1">
@@ -51,6 +69,13 @@ export const Sidebar = () => {
             <p className="text-xs text-muted-foreground">Always here to help</p>
           </div>
         </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-base"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="font-sans">Sign Out</span>
+        </button>
       </div>
     </aside>
   );

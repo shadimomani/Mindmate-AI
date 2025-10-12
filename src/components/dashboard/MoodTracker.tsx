@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { Smile, Meh, Frown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const moods = [
   { icon: Smile, label: "Great", value: 5 },
@@ -11,6 +14,36 @@ const moods = [
 
 export const MoodTracker = () => {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const handleMoodSelect = async (mood: typeof moods[0]) => {
+    if (!user) return;
+
+    setSelectedMood(mood.value);
+
+    try {
+      const { error } = await supabase.from('mood_entries').insert({
+        user_id: user.id,
+        mood_value: mood.value,
+        mood_label: mood.label,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Mood logged',
+        description: `You're feeling ${mood.label.toLowerCase()} today`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to log mood',
+        variant: 'destructive',
+      });
+      setSelectedMood(null);
+    }
+  };
 
   return (
     <div className="bg-card rounded-xl p-6 shadow-soft border border-border">
@@ -20,7 +53,7 @@ export const MoodTracker = () => {
         {moods.map((mood, index) => (
           <button
             key={index}
-            onClick={() => setSelectedMood(mood.value)}
+            onClick={() => handleMoodSelect(mood)}
             className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-lg transition-base ${
               selectedMood === mood.value
                 ? "bg-accent text-accent-foreground"
