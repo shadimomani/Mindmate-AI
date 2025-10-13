@@ -39,7 +39,7 @@ export const AIChat = () => {
 
     try {
       const response = await fetch(
-        "https://mindmate1.app.n8n.cloud/webhook-test/b8b90543-7fc5-4dfb-9f1f-d109e3647d99",
+        "https://mindmate1.app.n8n.cloud/webhook/b8b90543-7fc5-4dfb-9f1f-d109e3647d99",
         {
           method: "POST",
           headers: {
