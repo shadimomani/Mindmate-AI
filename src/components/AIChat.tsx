@@ -23,7 +23,7 @@ export const AIChat = () => {
   ]);
   const [inputValue, setInputValue] = useState("");
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim()) return;
 
     const userMessage: Message = {
@@ -34,18 +34,43 @@ export const AIChat = () => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const messageText = inputValue;
     setInputValue("");
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const response = await fetch(
+        "https://mindmate1.app.n8n.cloud/webhook-test/b8b90543-7fc5-4dfb-9f1f-d109e3647d99",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: messageText }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to get response from AI");
+      }
+
+      const data = await response.json();
       const aiResponse: Message = {
         id: Date.now() + 1,
-        text: "I'm here to help! To provide you with personalized assistance, connect Lovable Cloud to enable AI features.",
+        text: data.response || data.message || "Sorry, I couldn't process your request.",
         sender: "ai",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
+    } catch (error) {
+      console.error("Error communicating with AI:", error);
+      const errorResponse: Message = {
+        id: Date.now() + 1,
+        text: "Sorry, I'm having trouble connecting right now. Please try again.",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorResponse]);
+    }
   };
 
   return (
