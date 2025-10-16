@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
-import { Sidebar } from "./Sidebar";
+import { AppSidebar } from "./Sidebar";
 import { AIChat } from "./AIChat";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "./ui/sidebar";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -8,12 +9,20 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <main className="ml-64 p-8">
-        {children}
-      </main>
-      <AIChat />
-    </div>
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 items-center gap-2 border-b px-6">
+            <SidebarTrigger />
+            <h2 className="text-xl font-semibold">MindMate</h2>
+          </header>
+          <main className="flex-1 p-8">
+            {children}
+          </main>
+        </SidebarInset>
+        <AIChat />
+      </div>
+    </SidebarProvider>
   );
 };
