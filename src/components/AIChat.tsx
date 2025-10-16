@@ -3,6 +3,9 @@ import { MessageCircle, X, Send, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { chatMessageSchema } from "@/lib/validation";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: number;
@@ -22,9 +25,21 @@ export const AIChat = () => {
     },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSend = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isLoading) return;
+
+    // Validate input
+    const validation = chatMessageSchema.safeParse({ message: inputValue });
+    if (!validation.success) {
+      toast({
+        variant: "destructive",
+        description: validation.error.errors[0].message,
+      });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now(),
@@ -36,24 +51,17 @@ export const AIChat = () => {
     setMessages((prev) => [...prev, userMessage]);
     const messageText = inputValue;
     setInputValue("");
+    setIsLoading(true);
 
     try {
-      const response = await fetch(
-        "https://mindmate1.app.n8n.cloud/webhook/b8b90543-7fc5-4dfb-9f1f-d109e3647d99",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ message: messageText }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: { message: messageText }
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to get response from AI");
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
       const aiResponse: Message = {
         id: Date.now() + 1,
         text: data.response || data.message || "Sorry, I couldn't process your request.",
@@ -61,15 +69,31 @@ export const AIChat = () => {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiResponse]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error communicating with AI:", error);
+      
+      let errorMessage = "Sorry, I'm having trouble connecting right now. Please try again.";
+      
+      if (error.message?.includes('429')) {
+        errorMessage = "Too many requests. Please wait a moment before sending another message.";
+      } else if (error.message?.includes('401')) {
+        errorMessage = "Please sign in to use the AI assistant.";
+      }
+      
+      toast({
+        variant: "destructive",
+        description: errorMessage,
+      });
+      
       const errorResponse: Message = {
         id: Date.now() + 1,
-        text: "Sorry, I'm having trouble connecting right now. Please try again.",
+        text: errorMessage,
         sender: "ai",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorResponse]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -140,14 +164,17 @@ export const AIChat = () => {
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
                 placeholder="Ask me anything..."
                 className="flex-1"
+                disabled={isLoading}
+                maxLength={1000}
               />
               <Button
                 onClick={handleSend}
                 size="icon"
                 className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                disabled={isLoading}
               >
                 <Send className="w-5 h-5" />
               </Button>

@@ -29,3 +29,14 @@ export const photoUploadSchema = z.object({
       'Only JPEG, PNG, WEBP, and GIF images are allowed'
     ),
 });
+
+export const chatMessageSchema = z.object({
+  message: z.string()
+    .trim()
+    .min(1, 'Message cannot be empty')
+    .max(1000, 'Message is too long (max 1000 characters)')
+    .refine(
+      (val) => !/<script|javascript:|on\w+=/i.test(val),
+      'Invalid content detected'
+    ),
+});
