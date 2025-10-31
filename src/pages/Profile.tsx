@@ -139,31 +139,32 @@ const Profile = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-serif font-bold text-foreground mb-2">Profile</h1>
-            <p className="text-muted-foreground">Manage your account settings</p>
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground mb-1 sm:mb-2 truncate">Profile</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage your account settings</p>
           </div>
-          <User className="w-8 h-8 text-accent" />
+          <User className="w-6 h-6 sm:w-8 sm:h-8 text-accent shrink-0" />
         </div>
 
-        <div className="bg-card rounded-xl p-6 shadow-soft border border-border space-y-6">
+        <div className="bg-card rounded-xl p-4 sm:p-6 shadow-soft border border-border space-y-4 sm:space-y-6">
           <div>
-            <h3 className="text-xl font-serif font-semibold text-foreground mb-4">Profile Picture</h3>
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-3 sm:mb-4">Profile Picture</h3>
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+              <div className="relative shrink-0">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-12 h-12 text-muted-foreground" />
+                    <User className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground" />
                   )}
                 </div>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingAvatar}
-                  className="absolute bottom-0 right-0 p-2 bg-accent rounded-full hover:bg-accent/90 transition-base disabled:opacity-50"
+                  className="absolute bottom-0 right-0 p-2 sm:p-2.5 bg-accent rounded-full hover:bg-accent/90 transition-base disabled:opacity-50 touch-manipulation"
+                  aria-label="Upload profile picture"
                 >
                   <Camera className="w-4 h-4 text-accent-foreground" />
                 </button>
@@ -175,7 +176,7 @@ const Profile = () => {
                   className="hidden"
                 />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 text-center sm:text-left">
                 <p className="text-sm text-muted-foreground">
                   {uploadingAvatar ? 'Uploading...' : 'Click the camera icon to upload a new photo'}
                 </p>
@@ -187,39 +188,40 @@ const Profile = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-serif font-semibold text-foreground">Personal Information</h3>
+            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground">Personal Information</h3>
             
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name" className="text-sm sm:text-base">Display Name</Label>
               <Input
                 id="name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your name"
                 maxLength={100}
+                className="h-11 sm:h-10 text-base"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={user?.email || ''}
                 disabled
-                className="bg-muted"
+                className="bg-muted h-11 sm:h-10 text-base"
               />
               <p className="text-xs text-muted-foreground">Email cannot be changed</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="bio" className="text-sm sm:text-base">Bio</Label>
               <Textarea
                 id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Tell us about yourself..."
-                className="min-h-[100px]"
+                className="min-h-[100px] text-base"
                 maxLength={500}
               />
               <p className="text-xs text-muted-foreground">{bio.length}/500 characters</p>
@@ -227,24 +229,25 @@ const Profile = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-serif font-semibold text-foreground">Preferences</h3>
+            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground">Preferences</h3>
             
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-muted-foreground">Receive updates via email</p>
+            <div className="flex items-center justify-between gap-4 py-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm sm:text-base">Email Notifications</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Receive updates via email</p>
               </div>
-              <Switch />
+              <Switch className="shrink-0" />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Dark Mode</p>
-                <p className="text-sm text-muted-foreground">Toggle dark mode theme</p>
+            <div className="flex items-center justify-between gap-4 py-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm sm:text-base">Dark Mode</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Toggle dark mode theme</p>
               </div>
               <Switch 
                 checked={theme === "dark"}
                 onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                className="shrink-0"
               />
             </div>
           </div>
@@ -252,7 +255,7 @@ const Profile = () => {
           <Button 
             onClick={handleSave} 
             disabled={loading}
-            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+            className="w-full h-11 sm:h-10 bg-accent hover:bg-accent/90 text-accent-foreground text-base touch-manipulation"
           >
             {loading ? 'Saving...' : 'Save Changes'}
           </Button>
