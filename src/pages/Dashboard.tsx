@@ -88,10 +88,10 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500">
         <WelcomeCard displayName={displayName} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           <StatsCard
             title="Tasks Completed"
             value={stats.tasksCompletedToday}
@@ -122,12 +122,12 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
           <TaskList />
           <HabitTracker />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
           <MoodTracker />
           <ReflectionCard />
         </div>

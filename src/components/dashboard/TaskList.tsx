@@ -91,8 +91,8 @@ export const TaskList = () => {
   };
 
   return (
-    <div className="bg-card rounded-xl p-6 shadow-soft border border-border">
-      <h3 className="text-xl font-serif font-semibold text-foreground mb-4">Today's Focus</h3>
+    <div className="bg-card rounded-xl p-4 sm:p-6 shadow-soft border border-border">
+      <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-4">Today's Focus</h3>
       
       <div className="space-y-3 mb-4">
         {tasks.map(task => (
@@ -106,7 +106,7 @@ export const TaskList = () => {
             ) : (
               <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             )}
-            <span className={`font-sans ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+            <span className={`font-sans text-sm sm:text-base break-words ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
               {task.title}
             </span>
           </div>
