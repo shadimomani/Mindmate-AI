@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ThemeProvider } from "next-themes";
 import Dashboard from "./pages/Dashboard";
 import DailyPlanner from "./pages/DailyPlanner";
 import Habits from "./pages/Habits";
@@ -19,11 +20,12 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -39,6 +41,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

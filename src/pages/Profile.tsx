@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { profileSchema, photoUploadSchema } from "@/lib/validation";
+import { useTheme } from "next-themes";
 
 const Profile = () => {
   const [displayName, setDisplayName] = useState("");
@@ -20,6 +21,7 @@ const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -240,7 +242,10 @@ const Profile = () => {
                 <p className="font-medium">Dark Mode</p>
                 <p className="text-sm text-muted-foreground">Toggle dark mode theme</p>
               </div>
-              <Switch />
+              <Switch 
+                checked={theme === "dark"}
+                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+              />
             </div>
           </div>
 
