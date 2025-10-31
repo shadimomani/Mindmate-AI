@@ -1,6 +1,10 @@
 import { Sparkles } from "lucide-react";
 
-export const WelcomeCard = () => {
+interface WelcomeCardProps {
+  displayName?: string;
+}
+
+export const WelcomeCard = ({ displayName }: WelcomeCardProps) => {
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "Good morning" : currentHour < 18 ? "Good afternoon" : "Good evening";
   
@@ -9,7 +13,7 @@ export const WelcomeCard = () => {
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-3xl font-serif font-bold text-foreground mb-2">
-            {greeting}, Sarah
+            {greeting}{displayName ? `, ${displayName}` : ""}
           </h2>
           <p className="text-muted-foreground font-sans">
             Let's make today productive and meaningful

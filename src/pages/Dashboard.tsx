@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [displayName, setDisplayName] = useState<string>("");
   const [stats, setStats] = useState({
     tasksCompletedToday: 0,
     currentStreak: 0,
@@ -23,6 +24,16 @@ const Dashboard = () => {
     if (!user) return;
 
     const fetchStats = async () => {
+      // Fetch user profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.display_name) {
+        setDisplayName(profile.display_name);
+      }
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -78,7 +89,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-in fade-in duration-500">
-        <WelcomeCard />
+        <WelcomeCard displayName={displayName} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
