@@ -29,18 +29,41 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const emailValidation = z.string().email('Invalid email address').safeParse(email);
+      const validation = authSchema.safeParse({
+        email,
+        password,
+      });
       
-      if (!emailValidation.success) {
+      if (!validation.success) {
         toast({
           title: 'Validation Error',
-          description: emailValidation.error.errors[0].message,
+          description: validation.error.errors[0].message,
           variant: 'destructive',
         });
         setLoading(false);
         return;
       }
 
+      // First verify password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        toast({
+          title: 'Error',
+          description: signInError.message,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Sign out immediately to require OTP
+      await supabase.auth.signOut();
+
+      // Then send OTP
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -243,12 +266,25 @@ const Auth = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  maxLength={72}
+                  required
+                />
+              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
                 disabled={loading}
               >
-                {loading ? 'Sending...' : 'Send Verification Code'}
+                {loading ? 'Verifying...' : 'Continue'}
               </Button>
             </form>
           ) : (
