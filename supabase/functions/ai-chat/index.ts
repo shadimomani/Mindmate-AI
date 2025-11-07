@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Forwarding message to n8n for user:', user.id);
+    console.log('Forwarding message to n8n webhook');
 
     // Forward to n8n webhook with user context
     const response = await fetch(webhookUrl, {
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('Received response from n8n for user:', user.id);
+    console.log('Received response from n8n webhook');
 
     return new Response(
       JSON.stringify(data),
