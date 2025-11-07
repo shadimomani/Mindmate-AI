@@ -151,7 +151,7 @@ const Auth = () => {
         return;
       }
 
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -162,18 +162,37 @@ const Auth = () => {
         },
       });
 
-      if (error) {
+      if (signUpError) {
         toast({
           title: 'Sign Up Error',
-          description: error.message,
+          description: signUpError.message,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Send OTP after successful signup
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+        },
+      });
+
+      if (otpError) {
+        toast({
+          title: 'Error',
+          description: otpError.message,
           variant: 'destructive',
         });
       } else {
+        setOtpSent(true);
+        setIsSignUp(false);
         toast({
-          title: 'Success!',
-          description: 'Account created successfully. Welcome to MindMate!',
+          title: 'Account Created!',
+          description: 'Check your email for the verification code to complete setup.',
         });
-        navigate('/');
       }
     } catch (error) {
       toast({
