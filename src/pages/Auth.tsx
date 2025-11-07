@@ -19,10 +19,95 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const emailValidation = z.string().email('Invalid email address').safeParse(email);
+      
+      if (!emailValidation.success) {
+        toast({
+          title: 'Validation Error',
+          description: emailValidation.error.errors[0].message,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: 'Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        setOtpSent(true);
+        toast({
+          title: 'Code Sent!',
+          description: 'Check your email for the verification code.',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'email',
+      });
+
+      if (error) {
+        toast({
+          title: 'Verification Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Welcome back!',
+          description: 'Successfully signed in.',
+        });
+        navigate('/');
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -30,7 +115,7 @@ const Auth = () => {
       const validation = authSchema.safeParse({
         email,
         password,
-        displayName: isSignUp ? displayName : undefined,
+        displayName,
       });
 
       if (!validation.success) {
@@ -43,50 +128,29 @@ const Auth = () => {
         return;
       }
 
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              display_name: displayName,
-            },
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            display_name: displayName,
           },
-        });
+        },
+      });
 
-        if (error) {
-          toast({
-            title: 'Sign Up Error',
-            description: error.message,
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Success!',
-            description: 'Account created successfully. Welcome to MindMate!',
-          });
-          navigate('/');
-        }
+      if (error) {
+        toast({
+          title: 'Sign Up Error',
+          description: error.message,
+          variant: 'destructive',
+        });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        toast({
+          title: 'Success!',
+          description: 'Account created successfully. Welcome to MindMate!',
         });
-
-        if (error) {
-          toast({
-            title: 'Sign In Error',
-            description: error.message,
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Welcome back!',
-            description: 'Successfully signed in.',
-          });
-          navigate('/');
-        }
+        navigate('/');
       }
     } catch (error) {
       toast({
@@ -112,8 +176,8 @@ const Auth = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
+          {isSignUp ? (
+            <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="displayName">Name</Label>
                 <Input
@@ -126,47 +190,106 @@ const Auth = () => {
                   required
                 />
               </div>
-            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                maxLength={255}
-                required
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  maxLength={255}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                maxLength={72}
-                required
-              />
-              {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  maxLength={72}
+                  required
+                />
                 <p className="text-xs text-muted-foreground">
                   Must be at least 6 characters
                 </p>
-              )}
-            </div>
+              </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-              disabled={loading}
-            >
-              {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                disabled={loading}
+              >
+                {loading ? 'Please wait...' : 'Create Account'}
+              </Button>
+            </form>
+          ) : !otpSent ? (
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  maxLength={255}
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                disabled={loading}
+              >
+                {loading ? 'Sending...' : 'Send Verification Code'}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="otp">Verification Code</Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  maxLength={6}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Check your email for the verification code
+                </p>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                disabled={loading}
+              >
+                {loading ? 'Verifying...' : 'Verify & Sign In'}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setOtpSent(false);
+                  setOtp('');
+                }}
+              >
+                Use Different Email
+              </Button>
+            </form>
+          )}
 
           <div className="mt-6 text-center">
             <button
