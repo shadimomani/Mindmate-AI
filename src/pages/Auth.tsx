@@ -44,44 +44,31 @@ const Auth = () => {
         return;
       }
 
-      // First verify password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        toast({
-          title: 'Error',
-          description: signInError.message,
-          variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Sign out immediately to require OTP
-      await supabase.auth.signOut();
-
-      // Then send OTP
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
+      // Call our custom send-otp edge function
+      const { data, error } = await supabase.functions.invoke('send-otp', {
+        body: {
+          email,
+          purpose: 'login',
         },
       });
 
       if (error) {
         toast({
           title: 'Error',
-          description: error.message,
+          description: error.message || 'Failed to send verification code',
+          variant: 'destructive',
+        });
+      } else if (data?.error) {
+        toast({
+          title: 'Error',
+          description: data.error,
           variant: 'destructive',
         });
       } else {
         setOtpSent(true);
         toast({
           title: 'Code Sent!',
-          description: 'Check your email for the verification code.',
+          description: 'Check your email for the 6-digit verification code.',
         });
       }
     } catch (error) {
@@ -100,24 +87,49 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'email',
+      // Call our custom verify-otp edge function
+      const { data, error } = await supabase.functions.invoke('verify-otp', {
+        body: {
+          email,
+          code: otp,
+          purpose: isSignUp ? 'signup' : 'login',
+          password: password, // Include password for signup or login
+          displayName: isSignUp ? displayName : undefined,
+        },
       });
 
       if (error) {
         toast({
           title: 'Verification Error',
-          description: error.message,
+          description: error.message || 'Failed to verify code',
           variant: 'destructive',
         });
-      } else {
+      } else if (data?.error) {
         toast({
-          title: 'Welcome back!',
-          description: 'Successfully signed in.',
+          title: 'Verification Error',
+          description: data.error,
+          variant: 'destructive',
         });
-        navigate('/');
+      } else if (data?.success) {
+        // After successful verification, sign in with password
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          toast({
+            title: 'Sign In Error',
+            description: signInError.message,
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: isSignUp ? 'Account Created!' : 'Welcome back!',
+            description: 'Successfully signed in.',
+          });
+          navigate('/');
+        }
       }
     } catch (error) {
       toast({
@@ -151,47 +163,31 @@ const Auth = () => {
         return;
       }
 
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            display_name: displayName,
-          },
+      // Call our custom send-otp edge function for signup
+      const { data, error } = await supabase.functions.invoke('send-otp', {
+        body: {
+          email,
+          purpose: 'signup',
         },
       });
 
-      if (signUpError) {
-        toast({
-          title: 'Sign Up Error',
-          description: signUpError.message,
-          variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Send OTP after successful signup
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
-        },
-      });
-
-      if (otpError) {
+      if (error) {
         toast({
           title: 'Error',
-          description: otpError.message,
+          description: error.message || 'Failed to send verification code',
+          variant: 'destructive',
+        });
+      } else if (data?.error) {
+        toast({
+          title: 'Error',
+          description: data.error,
           variant: 'destructive',
         });
       } else {
         setOtpSent(true);
-        setIsSignUp(false);
         toast({
-          title: 'Account Created!',
-          description: 'Check your email for the verification code to complete setup.',
+          title: 'Verification Code Sent!',
+          description: 'Check your email for the 6-digit code to complete signup.',
         });
       }
     } catch (error) {
