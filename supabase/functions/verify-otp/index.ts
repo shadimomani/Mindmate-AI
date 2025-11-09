@@ -187,27 +187,8 @@ const handler = async (req: Request): Promise<Response> => {
       sessionData = signUpData;
       console.log(`Successfully created account`);
     } else {
-      // For login, verify user exists by querying auth.users efficiently
-      const { data: users, error: userError } = await supabase
-        .from('auth.users' as any)
-        .select('id, email')
-        .eq('email', email)
-        .limit(1)
-        .single();
-      
-      if (userError || !users) {
-        // Use generic error message to prevent user enumeration
-        console.log(`Login attempt for unverified email`);
-        return new Response(
-          JSON.stringify({ error: "Invalid code or email" }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-
-      sessionData = { user: users };
+      // For login, OTP validation is sufficient
+      // The client-side signInWithPassword will validate user existence
       console.log(`Successfully verified OTP for login`);
     }
 
@@ -215,7 +196,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         message: "OTP verified successfully",
-        user: sessionData.user,
+        user: sessionData?.user,
       }),
       {
         status: 200,
