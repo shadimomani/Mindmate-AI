@@ -88,9 +88,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!otpRecords || otpRecords.length === 0) {
-      console.log(`No matching OTP found for ${email}`);
+      // Use generic error to prevent user enumeration
+      console.log(`OTP verification failed`);
       return new Response(
-        JSON.stringify({ error: "Invalid or expired code" }),
+        JSON.stringify({ error: "Invalid code or email" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -102,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if code has expired
     if (new Date(otpRecord.expires_at) < new Date()) {
-      console.log(`OTP expired for ${email}`);
+      console.log(`OTP verification failed - expired`);
       return new Response(
         JSON.stringify({ error: "Code has expired. Please request a new one." }),
         {
@@ -114,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check attempt count
     if (otpRecord.attempt_count >= 3) {
-      console.log(`Too many attempts for ${email}`);
+      console.log(`OTP verification failed - too many attempts`);
       return new Response(
         JSON.stringify({
           error: "Too many failed attempts. Please request a new code.",
@@ -184,27 +185,21 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       sessionData = signUpData;
-      console.log(`Successfully created account for ${email}`);
+      console.log(`Successfully created account`);
     } else {
-      // For login, verify user exists
-      const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+      // For login, verify user exists by querying auth.users efficiently
+      const { data: users, error: userError } = await supabase
+        .from('auth.users' as any)
+        .select('id, email')
+        .eq('email', email)
+        .limit(1)
+        .single();
       
-      if (userError) {
-        console.error("User lookup error:", userError);
+      if (userError || !users) {
+        // Use generic error message to prevent user enumeration
+        console.log(`Login attempt for unverified email`);
         return new Response(
-          JSON.stringify({ error: "Failed to verify user" }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-
-      const user = userData.users.find((u) => u.email === email);
-      
-      if (!user) {
-        return new Response(
-          JSON.stringify({ error: "No account found with this email" }),
+          JSON.stringify({ error: "Invalid code or email" }),
           {
             status: 400,
             headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -212,8 +207,8 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      sessionData = { user };
-      console.log(`Successfully verified OTP for login: ${email}`);
+      sessionData = { user: users };
+      console.log(`Successfully verified OTP for login`);
     }
 
     return new Response(
