@@ -9,7 +9,13 @@ import { z } from 'zod';
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address').max(255, 'Email too long'),
-  password: z.string().min(6, 'Password must be at least 6 characters').max(72, 'Password too long'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(72, 'Password too long')
+    .refine((val) => /[A-Z]/.test(val), 'Password must contain at least one uppercase letter')
+    .refine((val) => /[a-z]/.test(val), 'Password must contain at least one lowercase letter')
+    .refine((val) => /[0-9]/.test(val), 'Password must contain at least one number')
+    .refine((val) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(val), 'Password must contain at least one special character'),
   displayName: z.string().trim().min(1, 'Name is required').max(100, 'Name too long').optional(),
 });
 
@@ -254,7 +260,7 @@ const Auth = () => {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Must be at least 6 characters
+                  Must be 8+ characters with uppercase, lowercase, number, and special character
                 </p>
               </div>
 
