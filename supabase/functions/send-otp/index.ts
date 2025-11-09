@@ -104,16 +104,19 @@ const handler = async (req: Request): Promise<Response> => {
     // Initialize Supabase client with service role key (bypass RLS)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Delete any existing active OTP for this email and purpose
+    // Delete any existing active OTP for this user_id and purpose
+    // Since we use a placeholder user_id for all unauthenticated users,
+    // we need to delete by user_id + purpose to match the unique constraint
+    const placeholderUserId = "00000000-0000-0000-0000-000000000000";
     await supabase
       .from("user_otp_codes")
       .delete()
-      .match({ email, purpose })
+      .match({ user_id: placeholderUserId, purpose })
       .is("consumed_at", null);
 
     // Store hashed code in database (we'll use a temporary user_id for unauthenticated users)
     const { error: dbError } = await supabase.from("user_otp_codes").insert({
-      user_id: "00000000-0000-0000-0000-000000000000", // Temporary placeholder for unauthenticated users
+      user_id: placeholderUserId, // Temporary placeholder for unauthenticated users
       email,
       purpose,
       code_hash: codeHash,
