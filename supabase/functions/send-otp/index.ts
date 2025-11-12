@@ -136,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email via Resend
     const emailResponse = await resend.emails.send({
-      from: "MindMate <onboarding@resend.dev>",
+      from: "MindMate <noreply@mindmate.ai>",
       to: [email],
       subject: `Your MindMate verification code: ${code}`,
       html: `
