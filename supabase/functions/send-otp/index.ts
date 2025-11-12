@@ -14,7 +14,7 @@ const corsHeaders = {
 
 interface SendOtpRequest {
   email: string;
-  purpose: "login" | "signup";
+  purpose: "login" | "signup" | "password_reset";
 }
 
 // Rate limiting map: email -> { count, resetTime }
@@ -71,9 +71,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    if (!["login", "signup"].includes(purpose)) {
+    if (!["login", "signup", "password_reset"].includes(purpose)) {
       return new Response(
-        JSON.stringify({ error: "Purpose must be 'login' or 'signup'" }),
+        JSON.stringify({ error: "Purpose must be 'login', 'signup', or 'password_reset'" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -162,7 +162,13 @@ const handler = async (req: Request): Promise<Response> => {
                     <tr>
                       <td style="padding: 0 40px 20px 40px;">
                         <p style="margin: 0 0 20px 0; color: #4a4a4a; font-size: 16px; line-height: 24px;">
-                          Hi there! Here's your verification code to ${purpose === "signup" ? "complete your signup" : "sign in to your account"}:
+                          Hi there! Here's your verification code to ${
+                            purpose === "signup" 
+                              ? "complete your signup" 
+                              : purpose === "password_reset"
+                              ? "reset your password"
+                              : "sign in to your account"
+                          }:
                         </p>
                         <div style="background-color: #f8f9fa; border-radius: 8px; padding: 24px; text-align: center; margin: 20px 0;">
                           <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Your Code</p>

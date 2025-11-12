@@ -22,6 +22,7 @@ const authSchema = z.object({
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -56,7 +57,7 @@ const Auth = () => {
       const { data, error } = await supabase.functions.invoke('send-otp', {
         body: {
           email,
-          purpose: 'login',
+          purpose: isPasswordReset ? 'password_reset' : 'login',
         },
       });
 
@@ -100,8 +101,8 @@ const Auth = () => {
         body: {
           email,
           code: otp,
-          purpose: isSignUp ? 'signup' : 'login',
-          password: password, // Include password for signup or login
+          purpose: isPasswordReset ? 'password_reset' : (isSignUp ? 'signup' : 'login'),
+          password: password, // Include password for signup, login, or reset
           displayName: isSignUp ? displayName : undefined,
         },
       });
@@ -119,24 +120,36 @@ const Auth = () => {
           variant: 'destructive',
         });
       } else if (data?.success) {
-        // After successful verification, sign in with password
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) {
+        if (isPasswordReset) {
+          // For password reset, just show success and reset form
           toast({
-            title: 'Sign In Error',
-            description: signInError.message,
-            variant: 'destructive',
+            title: 'Password Reset!',
+            description: 'Your password has been updated. Please sign in with your new password.',
           });
+          setIsPasswordReset(false);
+          setOtpSent(false);
+          setOtp('');
+          setPassword('');
         } else {
-          toast({
-            title: isSignUp ? 'Account Created!' : 'Welcome back!',
-            description: 'Successfully signed in.',
+          // After successful verification, sign in with password
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
           });
-          navigate('/');
+
+          if (signInError) {
+            toast({
+              title: 'Sign In Error',
+              description: signInError.message,
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: isSignUp ? 'Account Created!' : 'Welcome back!',
+              description: 'Successfully signed in.',
+            });
+            navigate('/');
+          }
         }
       }
     } catch (error) {
@@ -215,14 +228,79 @@ const Auth = () => {
         <div className="bg-card rounded-2xl shadow-soft border border-border p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
-              {isSignUp ? 'Join MindMate' : 'Welcome Back'}
+              {isPasswordReset ? 'Reset Password' : (isSignUp ? 'Join MindMate' : 'Welcome Back')}
             </h1>
             <p className="text-muted-foreground">
-              {isSignUp ? 'Create your account to get started' : 'Sign in to continue your journey'}
+              {isPasswordReset 
+                ? 'Enter your email and new password' 
+                : (isSignUp ? 'Create your account to get started' : 'Sign in to continue your journey')}
             </p>
           </div>
 
-          {isSignUp ? (
+          {isPasswordReset && !otpSent ? (
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  maxLength={255}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    maxLength={72}
+                    required
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Must be 8+ characters with uppercase, lowercase, number, and special character
+                </p>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                disabled={loading}
+              >
+                {loading ? 'Sending code...' : 'Send Reset Code'}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setIsPasswordReset(false);
+                  setEmail('');
+                  setPassword('');
+                }}
+              >
+                Back to Sign In
+              </Button>
+            </form>
+          ) : isSignUp ? (
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="displayName">Name</Label>
@@ -331,6 +409,22 @@ const Auth = () => {
               >
                 {loading ? 'Verifying...' : 'Continue'}
               </Button>
+
+              {!isPasswordReset && (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPasswordReset(true);
+                      setOtpSent(false);
+                      setOtp('');
+                    }}
+                    className="text-sm text-accent hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
             </form>
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
@@ -365,6 +459,9 @@ const Auth = () => {
                 onClick={() => {
                   setOtpSent(false);
                   setOtp('');
+                  if (isPasswordReset) {
+                    setIsPasswordReset(false);
+                  }
                 }}
               >
                 Use Different Email
@@ -372,17 +469,19 @@ const Auth = () => {
             </form>
           )}
 
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-accent hover:underline"
-            >
-              {isSignUp
-                ? 'Already have an account? Sign in'
-                : "Don't have an account? Sign up"}
-            </button>
-          </div>
+          {!isPasswordReset && (
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-accent hover:underline"
+              >
+                {isSignUp
+                  ? 'Already have an account? Sign in'
+                  : "Don't have an account? Sign up"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

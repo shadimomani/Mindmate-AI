@@ -13,7 +13,7 @@ const corsHeaders = {
 interface VerifyOtpRequest {
   email: string;
   code: string;
-  purpose: "login" | "signup";
+  purpose: "login" | "signup" | "password_reset";
   displayName?: string;
   password?: string;
 }
@@ -137,7 +137,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Failed to mark OTP as consumed:", updateError);
     }
 
-    // Handle signup vs login
+    // Handle signup vs login vs password_reset
     let sessionData;
 
     if (purpose === "signup") {
@@ -186,6 +186,54 @@ const handler = async (req: Request): Promise<Response> => {
 
       sessionData = signUpData;
       console.log(`Successfully created account`);
+    } else if (purpose === "password_reset") {
+      // Reset user password
+      if (!password) {
+        return new Response(
+          JSON.stringify({ error: "New password is required for password reset" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      // Get user by email
+      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers();
+      const user = users?.find(u => u.email === email);
+
+      if (getUserError || !user) {
+        console.error("User lookup error:", getUserError);
+        return new Response(
+          JSON.stringify({ error: "User not found" }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      // Update password using admin API
+      const { data: updateData, error: updatePasswordError } = await supabase.auth.admin.updateUserById(
+        user.id,
+        { password }
+      );
+
+      if (updatePasswordError) {
+        console.error("Password update error:", updatePasswordError);
+        return new Response(
+          JSON.stringify({
+            error: updatePasswordError.message || "Failed to reset password",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      sessionData = updateData;
+      console.log(`Successfully reset password for user`);
     } else {
       // For login, OTP validation is sufficient
       // The client-side signInWithPassword will validate user existence
