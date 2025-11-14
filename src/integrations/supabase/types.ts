@@ -185,42 +185,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_otp_codes: {
-        Row: {
-          attempt_count: number
-          code_hash: string
-          consumed_at: string | null
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          purpose: string
-          user_id: string
-        }
-        Insert: {
-          attempt_count?: number
-          code_hash: string
-          consumed_at?: string | null
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          purpose: string
-          user_id: string
-        }
-        Update: {
-          attempt_count?: number
-          code_hash?: string
-          consumed_at?: string | null
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          purpose?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
