@@ -22,62 +22,29 @@ const authSchema = z.object({
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleSignIn = async () => {
     setLoading(true);
-
     try {
-      const validation = authSchema.safeParse({
-        email,
-        password,
-      });
-      
-      if (!validation.success) {
-        toast({
-          title: 'Validation Error',
-          description: validation.error.errors[0].message,
-          variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Call our custom send-otp edge function
-      const { data, error } = await supabase.functions.invoke('send-otp', {
-        body: {
-          email,
-          purpose: isPasswordReset ? 'password_reset' : 'login',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
         },
       });
 
       if (error) {
         toast({
           title: 'Error',
-          description: error.message || 'Failed to send verification code',
+          description: error.message,
           variant: 'destructive',
-        });
-      } else if (data?.error) {
-        toast({
-          title: 'Error',
-          description: data.error,
-          variant: 'destructive',
-        });
-      } else {
-        setOtpSent(true);
-        toast({
-          title: 'Code Sent!',
-          description: 'Check your email for the 6-digit verification code.',
         });
       }
     } catch (error) {
@@ -91,66 +58,40 @@ const Auth = () => {
     }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Call our custom verify-otp edge function
-      const { data, error } = await supabase.functions.invoke('verify-otp', {
-        body: {
-          email,
-          code: otp,
-          purpose: isPasswordReset ? 'password_reset' : (isSignUp ? 'signup' : 'login'),
-          password: password, // Include password for signup, login, or reset
-          displayName: isSignUp ? displayName : undefined,
-        },
+      const validation = authSchema.safeParse({ email, password });
+      
+      if (!validation.success) {
+        toast({
+          title: 'Validation Error',
+          description: validation.error.errors[0].message,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
       if (error) {
         toast({
-          title: 'Verification Error',
-          description: error.message || 'Failed to verify code',
+          title: 'Sign In Error',
+          description: error.message,
           variant: 'destructive',
         });
-      } else if (data?.error) {
+      } else {
         toast({
-          title: 'Verification Error',
-          description: data.error,
-          variant: 'destructive',
+          title: 'Welcome back!',
+          description: 'Successfully signed in.',
         });
-      } else if (data?.success) {
-        if (isPasswordReset) {
-          // For password reset, just show success and reset form
-          toast({
-            title: 'Password Reset!',
-            description: 'Your password has been updated. Please sign in with your new password.',
-          });
-          setIsPasswordReset(false);
-          setOtpSent(false);
-          setOtp('');
-          setPassword('');
-        } else {
-          // After successful verification, sign in with password
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-
-          if (signInError) {
-            toast({
-              title: 'Sign In Error',
-              description: signInError.message,
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: isSignUp ? 'Account Created!' : 'Welcome back!',
-              description: 'Successfully signed in.',
-            });
-            navigate('/');
-          }
-        }
+        navigate('/');
       }
     } catch (error) {
       toast({
@@ -184,32 +125,30 @@ const Auth = () => {
         return;
       }
 
-      // Call our custom send-otp edge function for signup
-      const { data, error } = await supabase.functions.invoke('send-otp', {
-        body: {
-          email,
-          purpose: 'signup',
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            display_name: displayName,
+          },
         },
       });
 
       if (error) {
         toast({
-          title: 'Error',
-          description: error.message || 'Failed to send verification code',
-          variant: 'destructive',
-        });
-      } else if (data?.error) {
-        toast({
-          title: 'Error',
-          description: data.error,
+          title: 'Sign Up Error',
+          description: error.message,
           variant: 'destructive',
         });
       } else {
-        setOtpSent(true);
         toast({
-          title: 'Verification Code Sent!',
-          description: 'Check your email for the 6-digit code to complete signup.',
+          title: 'Account Created!',
+          description: 'Successfully created your account. You can now sign in.',
         });
+        setIsSignUp(false);
+        setPassword('');
       }
     } catch (error) {
       toast({
@@ -228,79 +167,52 @@ const Auth = () => {
         <div className="bg-card rounded-2xl shadow-soft border border-border p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
-              {isPasswordReset ? 'Reset Password' : (isSignUp ? 'Join MindMate' : 'Welcome Back')}
+              {isSignUp ? 'Join MindMate' : 'Welcome Back'}
             </h1>
             <p className="text-muted-foreground">
-              {isPasswordReset 
-                ? 'Enter your email and new password' 
-                : (isSignUp ? 'Create your account to get started' : 'Sign in to continue your journey')}
+              {isSignUp ? 'Create your account to get started' : 'Sign in to continue your journey'}
             </p>
           </div>
 
-          {isPasswordReset && !otpSent ? (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  maxLength={255}
-                  required
-                />
-              </div>
+          {/* Google Sign-In Button */}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full mb-6 flex items-center justify-center gap-3 h-12"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="currentColor"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            Continue with Google
+          </Button>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    maxLength={72}
-                    required
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Must be 8+ characters with uppercase, lowercase, number, and special character
-                </p>
-              </div>
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
+            </div>
+          </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-                disabled={loading}
-              >
-                {loading ? 'Sending code...' : 'Send Reset Code'}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setIsPasswordReset(false);
-                  setEmail('');
-                  setPassword('');
-                }}
-              >
-                Back to Sign In
-              </Button>
-            </form>
-          ) : isSignUp ? (
+          {isSignUp ? (
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="displayName">Name</Label>
@@ -360,11 +272,11 @@ const Auth = () => {
                 className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
                 disabled={loading}
               >
-                {loading ? 'Please wait...' : 'Create Account'}
+                {loading ? 'Creating account...' : 'Create Account'}
               </Button>
             </form>
-          ) : !otpSent ? (
-            <form onSubmit={handleSendOtp} className="space-y-4">
+          ) : (
+            <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -407,81 +319,22 @@ const Auth = () => {
                 className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
                 disabled={loading}
               >
-                {loading ? 'Verifying...' : 'Continue'}
-              </Button>
-
-              {!isPasswordReset && (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsPasswordReset(true);
-                      setOtpSent(false);
-                      setOtp('');
-                    }}
-                    className="text-sm text-accent hover:underline"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-              )}
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="otp">Verification Code</Label>
-                <Input
-                  id="otp"
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  maxLength={6}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Check your email for the verification code
-                </p>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-                disabled={loading}
-              >
-                {loading ? 'Verifying...' : 'Verify & Sign In'}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setOtpSent(false);
-                  setOtp('');
-                  if (isPasswordReset) {
-                    setIsPasswordReset(false);
-                  }
-                }}
-              >
-                Use Different Email
+                {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
           )}
 
-          {!isPasswordReset && (
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-accent hover:underline"
-              >
-                {isSignUp
-                  ? 'Already have an account? Sign in'
-                  : "Don't have an account? Sign up"}
-              </button>
-            </div>
-          )}
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm text-accent hover:underline"
+            >
+              {isSignUp
+                ? 'Already have an account? Sign in'
+                : "Don't have an account? Sign up"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
