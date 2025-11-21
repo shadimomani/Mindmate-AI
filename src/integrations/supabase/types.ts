@@ -53,6 +53,42 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_achievements: {
+        Row: {
+          created_at: string
+          current_streak: number
+          habits_tracked: number
+          id: string
+          month_year: string
+          productivity_score: number
+          reflections_count: number
+          tasks_completed: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          habits_tracked?: number
+          id?: string
+          month_year: string
+          productivity_score?: number
+          reflections_count?: number
+          tasks_completed?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          habits_tracked?: number
+          id?: string
+          month_year?: string
+          productivity_score?: number
+          reflections_count?: number
+          tasks_completed?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       mood_entries: {
         Row: {
           created_at: string
