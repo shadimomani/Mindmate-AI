@@ -13,7 +13,6 @@ const authSchema = z.object({
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .max(72, 'Password too long')
-    .refine((val) => /[A-Z]/.test(val), 'Password must contain at least one uppercase letter')
     .refine((val) => /[a-z]/.test(val), 'Password must contain at least one lowercase letter')
     .refine((val) => /[0-9]/.test(val), 'Password must contain at least one number')
     .refine((val) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(val), 'Password must contain at least one special character'),
@@ -263,7 +262,7 @@ const Auth = () => {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Must be 8+ characters with uppercase, lowercase, number, and special character
+                  Must be 8+ characters with lowercase, number, and special character
                 </p>
               </div>
 
