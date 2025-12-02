@@ -19,7 +19,7 @@ const Insights = () => {
     productivity: 0,
   });
 
-  const [monthlyStats, setMonthlyStats] = useState({
+  const [weeklyStats, setWeeklyStats] = useState({
     currentStreak: 0,
     habitsTracked: 0,
     reflections: 0,
@@ -33,11 +33,6 @@ const Insights = () => {
     const fetchAnalytics = async () => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      const monthStart = new Date();
-      monthStart.setDate(1);
-      monthStart.setHours(0, 0, 0, 0);
 
       // Tasks completed this week
       const { data: tasks } = await supabase
@@ -47,13 +42,12 @@ const Insights = () => {
         .eq("completed", true)
         .gte("updated_at", weekAgo.toISOString());
 
-      // Tasks completed this month
-      const { data: monthlyTasks } = await supabase
-        .from("tasks")
+      // Reflections this week
+      const { data: weeklyReflections } = await supabase
+        .from("reflections")
         .select("*")
         .eq("user_id", user.id)
-        .eq("completed", true)
-        .gte("updated_at", monthStart.toISOString());
+        .gte("created_at", weekAgo.toISOString());
 
       // Active streak
       const { data: habits } = await supabase
@@ -68,14 +62,6 @@ const Insights = () => {
         .from("habits")
         .select("*")
         .eq("user_id", user.id);
-
-      // Reflections this month
-      const { data: reflections } = await supabase
-        .from("reflections")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("created_at", monthStart.toISOString());
-
       // Most productive day
       const dayTasks: Record<string, number> = {};
       tasks?.forEach(task => {
@@ -100,34 +86,59 @@ const Insights = () => {
       const completedHabits = allHabits?.filter(h => h.completed_today).length || 0;
       const totalHabits = (allHabits?.length || 0) * 7; // 7 days a week
 
-      // Calculate productivity score (0-100)
-      const productivity = Math.min(100, Math.round(
-        ((monthlyTasks?.length || 0) * 10 + 
+      // Calculate weekly productivity score (0-100)
+      const weeklyProductivity = Math.min(100, Math.round(
+        ((tasks?.length || 0) * 10 + 
          (habits?.[0]?.streak || 0) * 5 + 
-         (reflections?.length || 0) * 15) / 5
+         (weeklyReflections?.length || 0) * 15) / 5
       ));
 
       setAnalytics({
         tasksCompleted: tasks?.length || 0,
         activeStreak: habits?.[0]?.streak || 0,
         habitsTracked: allHabits?.length || 0,
-        reflections: reflections?.length || 0,
+        reflections: weeklyReflections?.length || 0,
         mostProductiveDay,
         averageMood: avgMoodLabel,
         habitsCompleted: { completed: completedHabits, total: totalHabits },
-        productivity,
+        productivity: weeklyProductivity,
       });
 
-      setMonthlyStats({
+      setWeeklyStats({
         currentStreak: habits?.[0]?.streak || 0,
         habitsTracked: allHabits?.length || 0,
-        reflections: reflections?.length || 0,
-        tasksCompleted: monthlyTasks?.length || 0,
-        productivity,
+        reflections: weeklyReflections?.length || 0,
+        tasksCompleted: tasks?.length || 0,
+        productivity: weeklyProductivity,
       });
 
-      // Save monthly achievements
+      // Save monthly achievements (cumulative)
       const currentMonthYear = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      
+      // Get monthly reflections for achievement tracking
+      const achievementMonthStart = new Date();
+      achievementMonthStart.setDate(1);
+      achievementMonthStart.setHours(0, 0, 0, 0);
+      
+      const { data: monthlyReflections } = await supabase
+        .from("reflections")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("created_at", achievementMonthStart.toISOString());
+        
+      const { data: monthlyTasks } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("completed", true)
+        .gte("updated_at", achievementMonthStart.toISOString());
+
+      const monthlyProductivity = Math.min(100, Math.round(
+        ((monthlyTasks?.length || 0) * 10 + 
+         (habits?.[0]?.streak || 0) * 5 + 
+         (monthlyReflections?.length || 0) * 15) / 5
+      ));
+
       await supabase
         .from("monthly_achievements")
         .upsert({
@@ -135,9 +146,9 @@ const Insights = () => {
           month_year: currentMonthYear,
           current_streak: habits?.[0]?.streak || 0,
           habits_tracked: allHabits?.length || 0,
-          reflections_count: reflections?.length || 0,
+          reflections_count: monthlyReflections?.length || 0,
           tasks_completed: monthlyTasks?.length || 0,
-          productivity_score: productivity,
+          productivity_score: monthlyProductivity,
         }, {
           onConflict: 'user_id,month_year'
         });
@@ -191,27 +202,27 @@ const Insights = () => {
         <MoodTracker />
 
         <div className="bg-card rounded-xl p-6 shadow-soft border border-border">
-          <h3 className="text-xl font-serif font-semibold text-foreground mb-4">Monthly Progress</h3>
+          <h3 className="text-xl font-serif font-semibold text-foreground mb-4">Weekly Summary</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <span className="text-foreground">Current Streak</span>
-              <span className="font-semibold text-accent">{monthlyStats.currentStreak} days</span>
+              <span className="font-semibold text-accent">{weeklyStats.currentStreak} days</span>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <span className="text-foreground">Habits Tracked</span>
-              <span className="font-semibold text-accent">{monthlyStats.habitsTracked}</span>
+              <span className="font-semibold text-accent">{weeklyStats.habitsTracked}</span>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <span className="text-foreground">Reflections</span>
-              <span className="font-semibold text-accent">{monthlyStats.reflections}</span>
+              <span className="font-semibold text-accent">{weeklyStats.reflections}</span>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <span className="text-foreground">Tasks Completed</span>
-              <span className="font-semibold text-accent">{monthlyStats.tasksCompleted}</span>
+              <span className="font-semibold text-accent">{weeklyStats.tasksCompleted}</span>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <span className="text-foreground">Productivity Score</span>
-              <span className="font-semibold text-accent">{monthlyStats.productivity}/100</span>
+              <span className="font-semibold text-accent">{weeklyStats.productivity}/100</span>
             </div>
           </div>
         </div>
