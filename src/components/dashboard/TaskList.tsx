@@ -6,11 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { taskSchema } from "@/lib/validation";
+import { format, startOfDay } from "date-fns";
 
 interface Task {
   id: string;
   title: string;
   completed: boolean;
+  created_at: string;
 }
 
 export const TaskList = () => {
@@ -29,10 +31,21 @@ export const TaskList = () => {
   const loadTasks = async () => {
     if (!user) return;
 
+    const todayStart = startOfDay(new Date()).toISOString();
+
+    // Delete tasks from previous days
+    await supabase
+      .from('tasks')
+      .delete()
+      .eq('user_id', user.id)
+      .lt('created_at', todayStart);
+
+    // Load only today's tasks
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
       .eq('user_id', user.id)
+      .gte('created_at', todayStart)
       .order('created_at', { ascending: false });
 
     if (!error && data) {
