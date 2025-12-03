@@ -2,108 +2,165 @@ import { Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { format, subDays, startOfDay } from "date-fns";
 
 interface Habit {
   id: string;
   name: string;
   streak: number;
-  completed_today: boolean;
-  last_completed_at: string | null;
 }
 
-const isToday = (dateString: string | null): boolean => {
-  if (!dateString) return false;
-  const date = new Date(dateString);
-  const today = new Date();
-  return date.toDateString() === today.toDateString();
-};
-
-const isYesterday = (dateString: string | null): boolean => {
-  if (!dateString) return false;
-  const date = new Date(dateString);
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return date.toDateString() === yesterday.toDateString();
-};
+interface HabitWithCompletions extends Habit {
+  completions: string[]; // Array of completed dates as YYYY-MM-DD strings
+}
 
 export const HabitTracker = () => {
   const { user } = useAuth();
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const [habits, setHabits] = useState<HabitWithCompletions[]>([]);
+
+  const getLast7Days = () => {
+    const days: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      days.push(format(subDays(new Date(), i), 'yyyy-MM-dd'));
+    }
+    return days;
+  };
+
+  const last7Days = getLast7Days();
+  const today = format(new Date(), 'yyyy-MM-dd');
 
   useEffect(() => {
     if (!user) return;
 
-    const fetchAndResetHabits = async () => {
-      const { data } = await supabase
+    const fetchHabitsWithCompletions = async () => {
+      // Fetch habits
+      const { data: habitsData } = await supabase
         .from("habits")
-        .select("*")
+        .select("id, name, streak")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (data) {
-        const processedHabits = await Promise.all(
-          data.map(async (habit) => {
-            const lastCompletedToday = isToday(habit.last_completed_at);
-            const lastCompletedYesterday = isYesterday(habit.last_completed_at);
-            
-            if (habit.completed_today && !lastCompletedToday) {
-              const newStreak = lastCompletedYesterday ? habit.streak : 0;
-              
-              await supabase
-                .from("habits")
-                .update({ 
-                  completed_today: false,
-                  streak: newStreak
-                })
-                .eq("id", habit.id);
-
-              return { ...habit, completed_today: false, streak: newStreak };
-            }
-            
-            if (!lastCompletedToday && !lastCompletedYesterday && habit.streak > 0) {
-              await supabase
-                .from("habits")
-                .update({ streak: 0 })
-                .eq("id", habit.id);
-              
-              return { ...habit, streak: 0 };
-            }
-
-            return habit;
-          })
-        );
-
-        setHabits(processedHabits);
+      if (!habitsData || habitsData.length === 0) {
+        setHabits([]);
+        return;
       }
+
+      // Fetch completions for last 7 days
+      const sevenDaysAgo = format(subDays(new Date(), 6), 'yyyy-MM-dd');
+      const { data: completionsData } = await supabase
+        .from("habit_completions")
+        .select("habit_id, completed_date")
+        .eq("user_id", user.id)
+        .gte("completed_date", sevenDaysAgo);
+
+      // Map completions to habits
+      const habitsWithCompletions: HabitWithCompletions[] = habitsData.map(habit => {
+        const habitCompletions = completionsData
+          ?.filter(c => c.habit_id === habit.id)
+          .map(c => c.completed_date) || [];
+        
+        return {
+          ...habit,
+          completions: habitCompletions
+        };
+      });
+
+      // Calculate and update streaks
+      for (const habit of habitsWithCompletions) {
+        const newStreak = calculateStreak(habit.completions);
+        if (newStreak !== habit.streak) {
+          await supabase
+            .from("habits")
+            .update({ streak: newStreak })
+            .eq("id", habit.id);
+          habit.streak = newStreak;
+        }
+      }
+
+      setHabits(habitsWithCompletions);
     };
 
-    fetchAndResetHabits();
+    fetchHabitsWithCompletions();
   }, [user]);
 
-  const toggleHabit = async (habitId: string, currentStatus: boolean) => {
+  const calculateStreak = (completions: string[]): number => {
+    if (completions.length === 0) return 0;
+    
+    const sortedDates = [...completions].sort().reverse();
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const yesterdayStr = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+    
+    // Streak must include today or yesterday
+    if (!sortedDates.includes(todayStr) && !sortedDates.includes(yesterdayStr)) {
+      return 0;
+    }
+
+    let streak = 0;
+    let checkDate = sortedDates.includes(todayStr) ? new Date() : subDays(new Date(), 1);
+    
+    while (true) {
+      const dateStr = format(checkDate, 'yyyy-MM-dd');
+      if (sortedDates.includes(dateStr)) {
+        streak++;
+        checkDate = subDays(checkDate, 1);
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  };
+
+  const toggleDay = async (habitId: string, dateStr: string) => {
     if (!user) return;
 
     const habit = habits.find(h => h.id === habitId);
     if (!habit) return;
 
-    const newCompleted = !currentStatus;
-    const newStreak = newCompleted 
-      ? habit.streak + 1 
-      : Math.max(0, habit.streak - 1);
+    const isCompleted = habit.completions.includes(dateStr);
 
-    const { error } = await supabase
-      .from("habits")
-      .update({ 
-        completed_today: newCompleted,
-        last_completed_at: newCompleted ? new Date().toISOString() : habit.last_completed_at,
-        streak: newStreak
-      })
-      .eq("id", habitId);
+    if (isCompleted) {
+      // Remove completion
+      await supabase
+        .from("habit_completions")
+        .delete()
+        .eq("habit_id", habitId)
+        .eq("completed_date", dateStr);
 
-    if (!error) {
-      setHabits(habits.map(h => 
-        h.id === habitId 
-          ? { ...h, completed_today: newCompleted, streak: newStreak }
+      const newCompletions = habit.completions.filter(d => d !== dateStr);
+      const newStreak = calculateStreak(newCompletions);
+
+      await supabase
+        .from("habits")
+        .update({ streak: newStreak })
+        .eq("id", habitId);
+
+      setHabits(habits.map(h =>
+        h.id === habitId
+          ? { ...h, completions: newCompletions, streak: newStreak }
+          : h
+      ));
+    } else {
+      // Add completion
+      await supabase
+        .from("habit_completions")
+        .insert({
+          habit_id: habitId,
+          user_id: user.id,
+          completed_date: dateStr
+        });
+
+      const newCompletions = [...habit.completions, dateStr];
+      const newStreak = calculateStreak(newCompletions);
+
+      await supabase
+        .from("habits")
+        .update({ streak: newStreak })
+        .eq("id", habitId);
+
+      setHabits(habits.map(h =>
+        h.id === habitId
+          ? { ...h, completions: newCompletions, streak: newStreak }
           : h
       ));
     }
@@ -130,19 +187,24 @@ export const HabitTracker = () => {
               <span className="text-sm text-muted-foreground">{habit.streak} day streak</span>
             </div>
             <div className="flex gap-1">
-              {[...Array(7)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => i === 6 && toggleHabit(habit.id, habit.completed_today)}
-                  className={`h-8 flex-1 rounded transition-base ${
-                    i < (habit.completed_today ? 7 : 6)
-                      ? "bg-accent"
-                      : "bg-muted"
-                  } flex items-center justify-center ${i === 6 ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
-                >
-                  {i < (habit.completed_today ? 7 : 6) && <Check className="w-4 h-4 text-accent-foreground" />}
-                </button>
-              ))}
+              {last7Days.map((dateStr, i) => {
+                const isCompleted = habit.completions.includes(dateStr);
+                const isToday = dateStr === today;
+                return (
+                  <button
+                    key={dateStr}
+                    onClick={() => toggleDay(habit.id, dateStr)}
+                    className={`h-8 flex-1 rounded transition-base ${
+                      isCompleted ? "bg-accent" : "bg-muted"
+                    } flex items-center justify-center cursor-pointer hover:opacity-80 ${
+                      isToday ? "ring-2 ring-primary ring-offset-1" : ""
+                    }`}
+                    title={format(new Date(dateStr), 'EEE, MMM d')}
+                  >
+                    {isCompleted && <Check className="w-4 h-4 text-accent-foreground" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
         ))}
