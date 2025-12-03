@@ -8,7 +8,23 @@ interface Habit {
   name: string;
   streak: number;
   completed_today: boolean;
+  last_completed_at: string | null;
 }
+
+const isToday = (dateString: string | null): boolean => {
+  if (!dateString) return false;
+  const date = new Date(dateString);
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
+};
+
+const isYesterday = (dateString: string | null): boolean => {
+  if (!dateString) return false;
+  const date = new Date(dateString);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return date.toDateString() === yesterday.toDateString();
+};
 
 export const HabitTracker = () => {
   const { user } = useAuth();
@@ -17,7 +33,7 @@ export const HabitTracker = () => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchHabits = async () => {
+    const fetchAndResetHabits = async () => {
       const { data } = await supabase
         .from("habits")
         .select("*")
@@ -25,29 +41,69 @@ export const HabitTracker = () => {
         .order("created_at", { ascending: false });
 
       if (data) {
-        setHabits(data);
+        const processedHabits = await Promise.all(
+          data.map(async (habit) => {
+            const lastCompletedToday = isToday(habit.last_completed_at);
+            const lastCompletedYesterday = isYesterday(habit.last_completed_at);
+            
+            if (habit.completed_today && !lastCompletedToday) {
+              const newStreak = lastCompletedYesterday ? habit.streak : 0;
+              
+              await supabase
+                .from("habits")
+                .update({ 
+                  completed_today: false,
+                  streak: newStreak
+                })
+                .eq("id", habit.id);
+
+              return { ...habit, completed_today: false, streak: newStreak };
+            }
+            
+            if (!lastCompletedToday && !lastCompletedYesterday && habit.streak > 0) {
+              await supabase
+                .from("habits")
+                .update({ streak: 0 })
+                .eq("id", habit.id);
+              
+              return { ...habit, streak: 0 };
+            }
+
+            return habit;
+          })
+        );
+
+        setHabits(processedHabits);
       }
     };
 
-    fetchHabits();
+    fetchAndResetHabits();
   }, [user]);
 
   const toggleHabit = async (habitId: string, currentStatus: boolean) => {
     if (!user) return;
 
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return;
+
+    const newCompleted = !currentStatus;
+    const newStreak = newCompleted 
+      ? habit.streak + 1 
+      : Math.max(0, habit.streak - 1);
+
     const { error } = await supabase
       .from("habits")
       .update({ 
-        completed_today: !currentStatus,
-        last_completed_at: !currentStatus ? new Date().toISOString() : null,
-        streak: !currentStatus ? habits.find(h => h.id === habitId)!.streak + 1 : Math.max(0, habits.find(h => h.id === habitId)!.streak - 1)
+        completed_today: newCompleted,
+        last_completed_at: newCompleted ? new Date().toISOString() : habit.last_completed_at,
+        streak: newStreak
       })
       .eq("id", habitId);
 
     if (!error) {
       setHabits(habits.map(h => 
         h.id === habitId 
-          ? { ...h, completed_today: !currentStatus, streak: !currentStatus ? h.streak + 1 : Math.max(0, h.streak - 1) }
+          ? { ...h, completed_today: newCompleted, streak: newStreak }
           : h
       ));
     }
