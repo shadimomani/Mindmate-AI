@@ -1,17 +1,19 @@
-import { useState } from "react";
-import { MessageCircle, X, Send, Brain } from "lucide-react";
+import { useState, useRef } from "react";
+import { MessageCircle, X, Send, Brain, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { chatMessageSchema } from "@/lib/validation";
 import { useToast } from "@/hooks/use-toast";
+import { convertToBase64 } from "@/lib/toBase64";
 
 interface Message {
   id: number;
   text: string;
   sender: "user" | "ai";
   timestamp: Date;
+  image?: string;
 }
 
 export const AIChat = () => {
@@ -26,7 +28,51 @@ export const AIChat = () => {
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      const base64 = await convertToBase64(file);
+      
+      const userMessage: Message = {
+        id: Date.now(),
+        text: "حلل هذه الصورة",
+        sender: "user",
+        timestamp: new Date(),
+        image: base64,
+      };
+      setMessages((prev) => [...prev, userMessage]);
+
+      const { data, error } = await supabase.functions.invoke('openai-chat', {
+        body: { message: "حلل هذه الصورة", image: base64 }
+      });
+
+      if (error) throw error;
+
+      const aiResponse: Message = {
+        id: Date.now() + 1,
+        text: data.reply?.content || "Sorry, I couldn't analyze the image.",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiResponse]);
+    } catch (error: any) {
+      console.error("Error analyzing image:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to analyze the image. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -145,6 +191,13 @@ export const AIChat = () => {
                         : "bg-muted text-foreground"
                     }`}
                   >
+                    {message.image && (
+                      <img 
+                        src={message.image} 
+                        alt="Uploaded" 
+                        className="max-w-full rounded-lg mb-2"
+                      />
+                    )}
                     <p className="text-xs sm:text-sm font-sans break-words">{message.text}</p>
                     <p className="text-xs opacity-70 mt-2">
                       {message.timestamp.toLocaleTimeString([], {
@@ -160,7 +213,23 @@ export const AIChat = () => {
 
           {/* Input */}
           <div className="p-3 sm:p-4 border-t border-border">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
             <div className="flex gap-2">
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                size="icon"
+                variant="outline"
+                className="shrink-0"
+                disabled={isLoading}
+              >
+                <Image className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
