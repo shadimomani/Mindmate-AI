@@ -54,8 +54,8 @@ export const AIChat = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { message: messageText }
+      const { data, error } = await supabase.functions.invoke('openai-chat', {
+        body: { message: messageText, image: null }
       });
 
       if (error) {
@@ -64,7 +64,7 @@ export const AIChat = () => {
 
       const aiResponse: Message = {
         id: Date.now() + 1,
-        text: data.response || data.message || "Sorry, I couldn't process your request.",
+        text: data.reply?.content || "Sorry, I couldn't process your request.",
         sender: "ai",
         timestamp: new Date(),
       };
