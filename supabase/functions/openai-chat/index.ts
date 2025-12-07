@@ -13,9 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const { message, image } = await req.json();
@@ -29,72 +29,62 @@ serve(async (req) => {
 
     console.log('Processing chat request:', { message: message.substring(0, 50), hasImage: !!image });
 
-    // Build content parts for Gemini API
-    const parts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> = [
-      { text: message }
+    // Build content array for the AI
+    const content: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+      { type: "text", text: message }
     ];
 
     if (image) {
-      // Extract base64 data and mime type from data URL
-      const matches = image.match(/^data:(.+);base64,(.+)$/);
-      if (matches) {
-        const mimeType = matches[1];
-        const base64Data = matches[2];
-        parts.push({
-          inline_data: {
-            mime_type: mimeType,
-            data: base64Data
-          }
-        });
-      }
+      content.push({
+        type: "image_url",
+        image_url: { url: image }
+      });
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
+        model: 'google/gemini-2.5-flash',
+        messages: [
           {
-            parts: parts
+            role: 'user',
+            content: content
           }
         ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048,
-        }
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
+      console.error('AI Gateway error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: 'Gemini API quota exceeded. Please check your Google AI Studio billing or wait and try again.' }),
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Usage limit reached. Please add credits to continue.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
       return new Response(
-        JSON.stringify({ error: 'Failed to get response from Gemini' }),
+        JSON.stringify({ error: 'Failed to get response from AI' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = await response.json();
-    
-    // Extract text from Gemini response format
-    const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
-    const reply = {
-      role: 'assistant',
-      content: textContent
-    };
+    const reply = data.choices[0].message;
 
-    console.log('Gemini response received successfully');
+    console.log('AI response received successfully');
 
     return new Response(
       JSON.stringify({ reply }),
