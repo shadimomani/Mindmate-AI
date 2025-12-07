@@ -13,9 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OPENAI_API_KEY is not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const { message, image } = await req.json();
@@ -29,7 +29,7 @@ serve(async (req) => {
 
     console.log('Processing chat request:', { message: message.substring(0, 50), hasImage: !!image });
 
-    // Build content array for OpenAI
+    // Build content array for the AI
     const content: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
       { type: "text", text: message }
     ];
@@ -41,29 +41,42 @@ serve(async (req) => {
       });
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'user',
             content: content
           }
         ],
-        max_tokens: 1000,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
+      console.error('AI Gateway error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Usage limit reached. Please add credits to continue.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'Failed to get response from OpenAI' }),
+        JSON.stringify({ error: 'Failed to get response from AI' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -71,7 +84,7 @@ serve(async (req) => {
     const data = await response.json();
     const reply = data.choices[0].message;
 
-    console.log('OpenAI response received successfully');
+    console.log('AI response received successfully');
 
     return new Response(
       JSON.stringify({ reply }),
