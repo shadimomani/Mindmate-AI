@@ -71,6 +71,13 @@ serve(async (req) => {
       const errorText = await response.text();
       console.error('Gemini API error:', response.status, errorText);
       
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Gemini API quota exceeded. Please check your Google AI Studio billing or wait and try again.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ error: 'Failed to get response from Gemini' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
