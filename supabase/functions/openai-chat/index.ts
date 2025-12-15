@@ -105,10 +105,16 @@ function checkRateLimit(identifier: string, ctx: SecurityContext): { allowed: bo
 
 // ============= INPUT VALIDATION =============
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  image?: string;
+}
+
 interface ValidationResult {
   valid: boolean;
   error?: string;
-  sanitized?: { message: string; image?: string };
+  sanitized?: { message: string; image?: string; history?: ChatMessage[] };
 }
 
 function validateAndSanitizeInput(body: unknown, ctx: SecurityContext): ValidationResult {
@@ -117,7 +123,7 @@ function validateAndSanitizeInput(body: unknown, ctx: SecurityContext): Validati
     return { valid: false, error: 'Invalid request body' };
   }
 
-  const { message, image } = body as { message?: unknown; image?: unknown };
+  const { message, image, history } = body as { message?: unknown; image?: unknown; history?: unknown };
 
   // Message validation
   if (!message || typeof message !== 'string') {
@@ -171,9 +177,33 @@ function validateAndSanitizeInput(body: unknown, ctx: SecurityContext): Validati
     sanitizedImage = image;
   }
 
+  // Validate history (if present)
+  let sanitizedHistory: ChatMessage[] | undefined;
+  if (history !== undefined && history !== null) {
+    if (!Array.isArray(history)) {
+      return { valid: false, error: 'History must be an array' };
+    }
+    
+    // Validate each history message (limit to last 20 messages for context)
+    const recentHistory = history.slice(-20);
+    sanitizedHistory = [];
+    
+    for (const msg of recentHistory) {
+      if (!msg || typeof msg !== 'object') continue;
+      if (msg.role !== 'user' && msg.role !== 'assistant') continue;
+      if (typeof msg.content !== 'string') continue;
+      
+      sanitizedHistory.push({
+        role: msg.role,
+        content: msg.content.substring(0, MAX_MESSAGE_LENGTH),
+        image: typeof msg.image === 'string' ? msg.image : undefined
+      });
+    }
+  }
+
   return {
     valid: true,
-    sanitized: { message: trimmedMessage, image: sanitizedImage }
+    sanitized: { message: trimmedMessage, image: sanitizedImage, history: sanitizedHistory }
   };
 }
 
@@ -275,11 +305,12 @@ serve(async (req) => {
       return createSecurityResponse(400, { error: validation.error }, ctx);
     }
 
-    const { message, image } = validation.sanitized!;
+    const { message, image, history } = validation.sanitized!;
     
     securityLog('INFO', 'Processing chat request', ctx, { 
       messageLength: message.length, 
-      hasImage: !!image 
+      hasImage: !!image,
+      historyLength: history?.length || 0
     });
 
     // Verify API key is configured
@@ -289,17 +320,52 @@ serve(async (req) => {
       return createSecurityResponse(500, { error: 'AI service configuration error' }, ctx);
     }
 
-    // Build content array for the AI
-    const content: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+    // Build messages array with system prompt and history
+    const messages: Array<{ role: string; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> }> = [
+      { 
+        role: 'system', 
+        content: `You are MindMate AI, a helpful and empathetic personal assistant. You help users with daily planning, habit tracking, mood reflection, and personal growth. 
+        
+You have access to the conversation history to provide personalized and contextual responses. Remember past conversations and refer to them when relevant. Be warm, supportive, and encouraging.
+
+Key behaviors:
+- Remember what users have told you in previous messages
+- Provide personalized advice based on their patterns and preferences
+- Be encouraging about their progress and gentle about setbacks
+- Help with productivity, wellness, and self-reflection`
+      }
+    ];
+
+    // Add conversation history
+    if (history && history.length > 0) {
+      for (const msg of history) {
+        if (msg.image) {
+          messages.push({
+            role: msg.role,
+            content: [
+              { type: "text", text: msg.content },
+              { type: "image_url", image_url: { url: msg.image } }
+            ]
+          });
+        } else {
+          messages.push({ role: msg.role, content: msg.content });
+        }
+      }
+    }
+
+    // Build current message content
+    const currentContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
       { type: "text", text: message }
     ];
 
     if (image) {
-      content.push({
+      currentContent.push({
         type: "image_url",
         image_url: { url: image }
       });
     }
+
+    messages.push({ role: 'user', content: currentContent });
 
     // Call AI Gateway
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -310,7 +376,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'user', content }],
+        messages,
       }),
     });
 
