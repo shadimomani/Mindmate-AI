@@ -150,9 +150,9 @@ function validateAndSanitizeInput(body: unknown, ctx: SecurityContext): Validati
     }
   }
 
-  // Image validation (if present)
+  // Image validation (if present and not null)
   let sanitizedImage: string | undefined;
-  if (image !== undefined) {
+  if (image !== undefined && image !== null) {
     if (typeof image !== 'string') {
       return { valid: false, error: 'Image must be a base64 string' };
     }
