@@ -279,7 +279,7 @@ export const AIChat = () => {
       {/* Chat Window */}
       {isOpen && <div className="fixed inset-x-4 bottom-20 sm:bottom-24 sm:right-8 sm:left-auto sm:w-96 h-[70vh] sm:h-[600px] max-h-[600px] bg-card rounded-2xl shadow-strong border border-border flex flex-col z-50 animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
-          <div className="p-4 sm:p-6 border-b border-border beige-gradient rounded-t-2xl bg-secondary text-secondary-foreground">
+          <div className="p-4 sm:p-6 border-b border-border rounded-t-2xl bg-muted text-muted-foreground">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="p-2 bg-accent/20 rounded-lg">
