@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { MessageCircle, X, Send, Brain, Image } from "lucide-react";
+import { MessageCircle, X, Send, Brain, Image, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,6 +16,8 @@ interface Message {
   image?: string;
 }
 
+type LoadingState = "idle" | "typing" | "analyzing";
+
 export const AIChat = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -27,15 +29,17 @@ export const AIChat = () => {
     },
   ]);
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingState, setLoadingState] = useState<LoadingState>("idle");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const isLoading = loadingState !== "idle";
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || isLoading) return;
 
-    setIsLoading(true);
+    setLoadingState("analyzing");
 
     try {
       const base64 = await convertToBase64(file);
@@ -69,7 +73,7 @@ export const AIChat = () => {
         description: "Failed to analyze the image. Please try again.",
       });
     } finally {
-      setIsLoading(false);
+      setLoadingState("idle");
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -97,7 +101,7 @@ export const AIChat = () => {
     setMessages((prev) => [...prev, userMessage]);
     const messageText = inputValue;
     setInputValue("");
-    setIsLoading(true);
+    setLoadingState("typing");
 
     try {
       const { data, error } = await supabase.functions.invoke('openai-chat', {
@@ -139,7 +143,7 @@ export const AIChat = () => {
       };
       setMessages((prev) => [...prev, errorResponse]);
     } finally {
-      setIsLoading(false);
+      setLoadingState("idle");
     }
   };
 
@@ -208,6 +212,27 @@ export const AIChat = () => {
                   </div>
                 </div>
               ))}
+              
+              {/* Loading indicator */}
+              {loadingState !== "idle" && (
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 bg-muted text-foreground">
+                    <div className="flex items-center gap-2">
+                      {loadingState === "analyzing" ? (
+                        <>
+                          <Brain className="w-4 h-4 animate-pulse text-accent" />
+                          <span className="text-xs sm:text-sm text-muted-foreground">Analyzing image...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                          <span className="text-xs sm:text-sm text-muted-foreground">Typing...</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
 
