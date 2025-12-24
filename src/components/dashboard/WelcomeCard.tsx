@@ -1,24 +1,10 @@
 import { Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const quotes = [
-  // Success
-  "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-  "The only way to do great work is to love what you do.",
-  "Success usually comes to those who are too busy to be looking for it.",
-  // Discipline
-  "Discipline is the bridge between goals and accomplishment.",
-  "With self-discipline, most anything is possible.",
-  "The pain of discipline is nothing like the pain of disappointment.",
-  // Goals
-  "A goal without a plan is just a wish.",
-  "Set your goals high, and don't stop till you get there.",
-  "The future belongs to those who believe in the beauty of their dreams.",
-  // God
-  "Trust in the Lord with all your heart and lean not on your own understanding.",
-  "I can do all things through Christ who strengthens me.",
-  "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you.",
-  "Commit your work to the Lord, and your plans will be established.",
+const quoteKeys = [
+  'quote1', 'quote2', 'quote3', 'quote4', 'quote5', 'quote6',
+  'quote7', 'quote8', 'quote9', 'quote10', 'quote11', 'quote12', 'quote13'
 ];
 
 interface WelcomeCardProps {
@@ -26,14 +12,15 @@ interface WelcomeCardProps {
 }
 
 export const WelcomeCard = ({ displayName }: WelcomeCardProps) => {
+  const { t } = useLanguage();
   const currentHour = new Date().getHours();
-  const greeting = currentHour < 12 ? "Good morning" : currentHour < 18 ? "Good afternoon" : "Good evening";
+  const greeting = currentHour < 12 ? t('goodMorning') : currentHour < 18 ? t('goodAfternoon') : t('goodEvening');
   
-  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * quotes.length));
+  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * quoteKeys.length));
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setQuoteIndex((prev) => (prev + 1) % quotes.length);
+      setQuoteIndex((prev) => (prev + 1) % quoteKeys.length);
     }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(interval);
@@ -47,7 +34,7 @@ export const WelcomeCard = ({ displayName }: WelcomeCardProps) => {
             {greeting}{displayName ? `, ${displayName}` : ""}
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground font-sans">
-            Let's make today productive and meaningful
+            {t('makeProductiveDay')}
           </p>
         </div>
         <div className="p-2 sm:p-3 bg-accent/10 rounded-full shrink-0">
@@ -57,7 +44,7 @@ export const WelcomeCard = ({ displayName }: WelcomeCardProps) => {
 
       <div className="mt-4 sm:mt-6 p-3 sm:p-5 bg-muted rounded-xl border-l-4 border-accent">
         <p className="text-xs sm:text-sm font-serif italic text-foreground">
-          "{quotes[quoteIndex]}"
+          "{t(quoteKeys[quoteIndex])}"
         </p>
       </div>
     </div>

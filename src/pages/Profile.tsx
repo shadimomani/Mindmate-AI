@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { profileSchema, photoUploadSchema } from "@/lib/validation";
 import { useTheme } from "next-themes";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Profile = () => {
   const [displayName, setDisplayName] = useState("");
@@ -22,6 +23,7 @@ const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const { t, language, setLanguage } = useLanguage();
 
   useEffect(() => {
     if (user) {
@@ -57,7 +59,7 @@ const Profile = () => {
 
       if (!validation.success) {
         toast({
-          title: 'Validation Error',
+          title: t('validationError'),
           description: validation.error.errors[0].message,
           variant: 'destructive',
         });
@@ -85,12 +87,12 @@ const Profile = () => {
       setAvatarUrl(urlData.publicUrl);
       
       toast({
-        title: 'Success',
+        title: t('success'),
         description: 'Avatar updated successfully',
       });
     } catch (error) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: 'Failed to upload avatar',
         variant: 'destructive',
       });
@@ -107,7 +109,7 @@ const Profile = () => {
 
       if (!validation.success) {
         toast({
-          title: 'Validation Error',
+          title: t('validationError'),
           description: validation.error.errors[0].message,
           variant: 'destructive',
         });
@@ -123,12 +125,12 @@ const Profile = () => {
       if (error) throw error;
 
       toast({
-        title: 'Success',
+        title: t('success'),
         description: 'Profile updated successfully',
       });
     } catch (error) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: 'Failed to update profile',
         variant: 'destructive',
       });
@@ -142,15 +144,15 @@ const Profile = () => {
       <div className="space-y-4 sm:space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground mb-1 sm:mb-2 truncate">Profile</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Manage your account settings</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground mb-1 sm:mb-2 truncate">{t('profile')}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">{t('manageAccountSettings')}</p>
           </div>
           <User className="w-6 h-6 sm:w-8 sm:h-8 text-accent shrink-0" />
         </div>
 
         <div className="bg-card rounded-xl p-4 sm:p-6 shadow-soft border border-border space-y-4 sm:space-y-6">
           <div>
-            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-3 sm:mb-4">Profile Picture</h3>
+            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-3 sm:mb-4">{t('profilePicture')}</h3>
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
               <div className="relative shrink-0">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden">
@@ -178,32 +180,32 @@ const Profile = () => {
               </div>
               <div className="flex-1 text-center sm:text-left">
                 <p className="text-sm text-muted-foreground">
-                  {uploadingAvatar ? 'Uploading...' : 'Click the camera icon to upload a new photo'}
+                  {uploadingAvatar ? t('uploading') : t('clickCameraToUpload')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  JPG, PNG, WEBP or GIF. Max 5MB.
+                  {t('photoSpecs')}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground">Personal Information</h3>
+            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground">{t('personalInformation')}</h3>
             
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm sm:text-base">Display Name</Label>
+              <Label htmlFor="name" className="text-sm sm:text-base">{t('displayName')}</Label>
               <Input
                 id="name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your name"
+                placeholder={t('yourName')}
                 maxLength={100}
                 className="h-11 sm:h-10 text-base"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
+              <Label htmlFor="email" className="text-sm sm:text-base">{t('email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -211,42 +213,54 @@ const Profile = () => {
                 disabled
                 className="bg-muted h-11 sm:h-10 text-base"
               />
-              <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+              <p className="text-xs text-muted-foreground">{t('emailCannotBeChanged')}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bio" className="text-sm sm:text-base">Bio</Label>
+              <Label htmlFor="bio" className="text-sm sm:text-base">{t('bio')}</Label>
               <Textarea
                 id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell us about yourself..."
+                placeholder={t('tellUsAboutYourself')}
                 className="min-h-[100px] text-base"
                 maxLength={500}
               />
-              <p className="text-xs text-muted-foreground">{bio.length}/500 characters</p>
+              <p className="text-xs text-muted-foreground">{bio.length}/500 {t('characters')}</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground">Preferences</h3>
+            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground">{t('preferences')}</h3>
             
             <div className="flex items-center justify-between gap-4 py-2">
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm sm:text-base">Email Notifications</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Receive updates via email</p>
+                <p className="font-medium text-sm sm:text-base">{t('emailNotifications')}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{t('receiveUpdatesViaEmail')}</p>
               </div>
               <Switch className="shrink-0" />
             </div>
 
             <div className="flex items-center justify-between gap-4 py-2">
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm sm:text-base">Dark Mode</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Toggle dark mode theme</p>
+                <p className="font-medium text-sm sm:text-base">{t('darkMode')}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{t('toggleDarkMode')}</p>
               </div>
               <Switch 
                 checked={theme === "dark"}
                 onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                className="shrink-0"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-4 py-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm sm:text-base">{t('language')}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{t('switchToArabic')}</p>
+              </div>
+              <Switch 
+                checked={language === "ar"}
+                onCheckedChange={(checked) => setLanguage(checked ? "ar" : "en")}
                 className="shrink-0"
               />
             </div>
@@ -257,7 +271,7 @@ const Profile = () => {
             disabled={loading}
             className="w-full h-11 sm:h-10 bg-accent hover:bg-accent/90 text-accent-foreground text-base touch-manipulation"
           >
-            {loading ? 'Saving...' : 'Save Changes'}
+            {loading ? t('saving') : t('saveChanges')}
           </Button>
         </div>
       </div>
