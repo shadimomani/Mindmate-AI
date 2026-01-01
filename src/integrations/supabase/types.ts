@@ -234,6 +234,45 @@ export type Database = {
         }
         Relationships: []
       }
+      planner_analyses: {
+        Row: {
+          commitment_score: number
+          completion_rate: number
+          created_at: string
+          feedback_message: string | null
+          id: string
+          mood: string | null
+          notes: string | null
+          page_code: string | null
+          tasks_completed: boolean
+          user_id: string
+        }
+        Insert: {
+          commitment_score?: number
+          completion_rate?: number
+          created_at?: string
+          feedback_message?: string | null
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          page_code?: string | null
+          tasks_completed?: boolean
+          user_id: string
+        }
+        Update: {
+          commitment_score?: number
+          completion_rate?: number
+          created_at?: string
+          feedback_message?: string | null
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          page_code?: string | null
+          tasks_completed?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
