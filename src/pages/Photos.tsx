@@ -46,10 +46,10 @@ const Photos = () => {
 
     const photosWithUrls = await Promise.all(
       (data || []).map(async (photo) => {
-        const { data: urlData } = supabase.storage
+        const { data: urlData, error: urlError } = await supabase.storage
           .from('photos')
-          .getPublicUrl(photo.storage_path);
-        return { ...photo, url: urlData.publicUrl };
+          .createSignedUrl(photo.storage_path, 3600); // 1 hour expiry
+        return { ...photo, url: urlError ? undefined : urlData?.signedUrl };
       })
     );
 
