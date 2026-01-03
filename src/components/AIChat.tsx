@@ -8,6 +8,7 @@ import { chatMessageSchema } from "@/lib/validation";
 import { useToast } from "@/hooks/use-toast";
 import { convertToBase64 } from "@/lib/toBase64";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 interface Message {
   id: string;
   text: string;
@@ -25,6 +26,7 @@ export const AIChat = () => {
   const {
     user
   } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -272,12 +274,12 @@ export const AIChat = () => {
   };
   return <>
       {/* Floating Chat Button */}
-      <button onClick={() => setIsOpen(!isOpen)} className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 rounded-full gold-gradient shadow-strong flex items-center justify-center transition-smooth hover:scale-110 hover:shadow-strong z-50" aria-label="Open AI Chat">
+      <button onClick={() => setIsOpen(!isOpen)} className={`fixed bottom-4 ${isRTL ? 'left-4 sm:left-8' : 'right-4 sm:right-8'} w-14 h-14 sm:w-16 sm:h-16 rounded-full gold-gradient shadow-strong flex items-center justify-center transition-smooth hover:scale-110 hover:shadow-strong z-50`} aria-label={t('aiAssistant')}>
         {isOpen ? <X className="w-6 h-6 sm:w-7 sm:h-7 text-accent-foreground" /> : <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-accent-foreground" />}
       </button>
 
       {/* Chat Window */}
-      {isOpen && <div className="fixed inset-x-4 bottom-20 sm:bottom-24 sm:right-8 sm:left-auto sm:w-96 h-[70vh] sm:h-[600px] max-h-[600px] bg-card rounded-2xl shadow-strong border border-border flex flex-col z-50 animate-in slide-in-from-bottom-4 duration-300">
+      {isOpen && <div className={`fixed inset-x-4 bottom-20 sm:bottom-24 ${isRTL ? 'sm:left-8 sm:right-auto' : 'sm:right-8 sm:left-auto'} sm:w-96 h-[70vh] sm:h-[600px] max-h-[600px] bg-card rounded-2xl shadow-strong border border-border flex flex-col z-50 animate-in slide-in-from-bottom-4 duration-300`} dir={isRTL ? 'rtl' : 'ltr'}>
           {/* Header */}
           <div className="p-4 sm:p-6 border-b border-border rounded-t-2xl bg-muted text-muted-foreground">
             <div className="flex items-center justify-between">
@@ -287,9 +289,9 @@ export const AIChat = () => {
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-serif font-semibold text-foreground">
-                    AI Assistant
+                    {t('aiAssistant')}
                   </h3>
-                  <p className="text-xs text-muted-foreground">Remembers your conversations</p>
+                  <p className="text-xs text-muted-foreground">{t('alwaysHereToHelp')}</p>
                 </div>
               </div>
               <div className="flex gap-1">
@@ -314,7 +316,7 @@ export const AIChat = () => {
                           {new Date(conv.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 ml-2" onClick={e => {
+                      <Button variant="ghost" size="icon" className={`h-7 w-7 shrink-0 ${isRTL ? 'mr-2' : 'ml-2'}`} onClick={e => {
               e.stopPropagation();
               deleteConversation(conv.id);
             }}>
@@ -326,18 +328,20 @@ export const AIChat = () => {
               {/* Messages */}
               <ScrollArea className="flex-1 p-3 sm:p-6" ref={scrollRef}>
                 <div className="space-y-4">
-                  {messages.length === 0 && <div className="flex justify-start">
+                  {messages.length === 0 && <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
                       <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 bg-muted text-foreground">
                         <p className="text-xs sm:text-sm font-sans">
-                          Hello! I'm your MindMate AI assistant. I remember our conversations and can help you with daily planning, habits, and personal growth. How can I help you today?
+                          {isRTL 
+                            ? "مرحباً! أنا مساعدك الذكي من MindMate. أتذكر محادثاتنا ويمكنني مساعدتك في التخطيط اليومي والعادات والنمو الشخصي. كيف يمكنني مساعدتك اليوم؟"
+                            : "Hello! I'm your MindMate AI assistant. I remember our conversations and can help you with daily planning, habits, and personal growth. How can I help you today?"}
                         </p>
                       </div>
                     </div>}
-                  {messages.map(message => <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
+                  {messages.map(message => <div key={message.id} className={`flex ${message.sender === "user" ? (isRTL ? "justify-start" : "justify-end") : (isRTL ? "justify-end" : "justify-start")}`}>
                       <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 ${message.sender === "user" ? "bg-accent text-accent-foreground" : "bg-muted text-foreground"}`}>
                         {message.image && <img src={message.image} alt="Uploaded" className="max-w-full rounded-lg mb-2" />}
                         <p className="text-xs sm:text-sm font-sans break-words whitespace-pre-wrap">{message.text}</p>
-                        <p className="text-xs opacity-70 mt-2">
+                        <p className={`text-xs opacity-70 mt-2 ${isRTL ? 'text-left' : 'text-right'}`}>
                           {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit"
@@ -347,15 +351,19 @@ export const AIChat = () => {
                     </div>)}
                   
                   {/* Loading indicator */}
-                  {loadingState !== "idle" && <div className="flex justify-start">
+                  {loadingState !== "idle" && <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
                       <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 bg-muted text-foreground">
                         <div className="flex items-center gap-2">
                           {loadingState === "analyzing" ? <>
                               <Brain className="w-4 h-4 animate-pulse text-accent" />
-                              <span className="text-xs sm:text-sm text-muted-foreground">Analyzing image...</span>
+                              <span className="text-xs sm:text-sm text-muted-foreground">
+                                {isRTL ? 'جاري تحليل الصورة...' : 'Analyzing image...'}
+                              </span>
                             </> : <>
                               <Loader2 className="w-4 h-4 animate-spin text-accent" />
-                              <span className="text-xs sm:text-sm text-muted-foreground">Typing...</span>
+                              <span className="text-xs sm:text-sm text-muted-foreground">
+                                {isRTL ? 'جاري الكتابة...' : 'Typing...'}
+                              </span>
                             </>}
                         </div>
                       </div>
@@ -370,9 +378,9 @@ export const AIChat = () => {
                   <Button onClick={() => fileInputRef.current?.click()} size="icon" variant="outline" className="shrink-0" disabled={isLoading || !user}>
                     <Image className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
-                  <Input value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyPress={e => e.key === "Enter" && !isLoading && handleSend()} placeholder={user ? "Ask me anything..." : "Sign in to chat"} className="flex-1 text-sm" disabled={isLoading || !user} maxLength={1000} />
+                  <Input value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyPress={e => e.key === "Enter" && !isLoading && handleSend()} placeholder={user ? (isRTL ? "اسألني أي شيء..." : "Ask me anything...") : (isRTL ? "سجل دخولك للمحادثة" : "Sign in to chat")} className="flex-1 text-sm" disabled={isLoading || !user} maxLength={1000} dir={isRTL ? 'rtl' : 'ltr'} />
                   <Button onClick={handleSend} size="icon" className="bg-accent hover:bg-accent/90 text-accent-foreground shrink-0" disabled={isLoading || !user}>
-                    <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Send className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? 'rotate-180' : ''}`} />
                   </Button>
                 </div>
               </div>
