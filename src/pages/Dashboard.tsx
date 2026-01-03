@@ -91,7 +91,10 @@ const Dashboard = () => {
       <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500">
         <WelcomeCard displayName={displayName} />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div 
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
+          data-onboarding="dashboard-stats"
+        >
           <StatsCard
             title="Tasks Completed"
             value={stats.tasksCompletedToday}
