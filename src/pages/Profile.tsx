@@ -44,8 +44,10 @@ const Profile = () => {
       setDisplayName(data.display_name || '');
       setBio(data.bio || '');
       if (data.avatar_url) {
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(data.avatar_url);
-        setAvatarUrl(urlData.publicUrl);
+        const { data: urlData } = await supabase.storage.from('avatars').createSignedUrl(data.avatar_url, 3600);
+        if (urlData?.signedUrl) {
+          setAvatarUrl(urlData.signedUrl);
+        }
       }
     }
   };
@@ -83,8 +85,10 @@ const Profile = () => {
 
       if (updateError) throw updateError;
 
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      setAvatarUrl(urlData.publicUrl);
+      const { data: urlData } = await supabase.storage.from('avatars').createSignedUrl(filePath, 3600);
+      if (urlData?.signedUrl) {
+        setAvatarUrl(urlData.signedUrl);
+      }
       
       toast({
         title: t('success'),
