@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "next-themes";
 import Dashboard from "./pages/Dashboard";
@@ -24,25 +25,27 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <LanguageProvider>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/planner" element={<ProtectedRoute><DailyPlanner /></ProtectedRoute>} />
-              <Route path="/habits" element={<ProtectedRoute><Habits /></ProtectedRoute>} />
-              <Route path="/reflections" element={<ProtectedRoute><Reflections /></ProtectedRoute>} />
-              <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-              <Route path="/photos" element={<ProtectedRoute><Photos /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
+          <OnboardingProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/planner" element={<ProtectedRoute><DailyPlanner /></ProtectedRoute>} />
+                  <Route path="/habits" element={<ProtectedRoute><Habits /></ProtectedRoute>} />
+                  <Route path="/reflections" element={<ProtectedRoute><Reflections /></ProtectedRoute>} />
+                  <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
+                  <Route path="/photos" element={<ProtectedRoute><Photos /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </OnboardingProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   </QueryClientProvider>

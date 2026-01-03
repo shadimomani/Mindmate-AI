@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { AppSidebar } from "./Sidebar";
 import { AIChat } from "./AIChat";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "./ui/sidebar";
+import { OnboardingOverlay } from "./onboarding/OnboardingOverlay";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,6 +23,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </main>
         </SidebarInset>
         <AIChat />
+        <OnboardingOverlay />
       </div>
     </SidebarProvider>
   );
