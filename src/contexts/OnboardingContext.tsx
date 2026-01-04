@@ -10,6 +10,7 @@ interface OnboardingContextType {
   completeOnboarding: () => void;
   skipOnboarding: () => void;
   triggerStep: (step: number) => void;
+  restartOnboarding: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -84,6 +85,22 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     await completeOnboarding();
   }, [completeOnboarding]);
 
+  const restartOnboarding = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({ onboarded: false })
+        .eq('id', user.id);
+
+      setIsOnboarding(true);
+      setCurrentStep(1);
+    } catch (error) {
+      console.error('Error restarting onboarding:', error);
+    }
+  }, [user]);
+
   return (
     <OnboardingContext.Provider
       value={{
@@ -94,6 +111,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         completeOnboarding,
         skipOnboarding,
         triggerStep,
+        restartOnboarding,
       }}
     >
       {children}

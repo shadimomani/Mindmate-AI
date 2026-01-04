@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { User, Camera } from "lucide-react";
+import { User, Camera, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { profileSchema, photoUploadSchema } from "@/lib/validation";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 
 const Profile = () => {
   const [displayName, setDisplayName] = useState("");
@@ -24,6 +25,7 @@ const Profile = () => {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const { t, language, setLanguage } = useLanguage();
+  const { restartOnboarding } = useOnboarding();
 
   useEffect(() => {
     if (user) {
@@ -267,6 +269,22 @@ const Profile = () => {
                 onCheckedChange={(checked) => setLanguage(checked ? "ar" : "en")}
                 className="shrink-0"
               />
+            </div>
+
+            <div className="flex items-center justify-between gap-4 py-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm sm:text-base">{t('restartOnboarding') || 'Restart Tutorial'}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{t('restartOnboardingDescription') || 'See the guided tour again'}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={restartOnboarding}
+                className="shrink-0 gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                {t('restart') || 'Restart'}
+              </Button>
             </div>
           </div>
 
