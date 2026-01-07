@@ -279,6 +279,7 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string | null
+          goals_completed: boolean | null
           id: string
           onboarded: boolean
           updated_at: string
@@ -288,6 +289,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          goals_completed?: boolean | null
           id: string
           onboarded?: boolean
           updated_at?: string
@@ -297,6 +299,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          goals_completed?: boolean | null
           id?: string
           onboarded?: boolean
           updated_at?: string
@@ -352,6 +355,45 @@ export type Database = {
           id?: string
           priority?: string | null
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_goals: {
+        Row: {
+          ai_analysis: Json | null
+          biggest_problem: string
+          commitment_score: number | null
+          created_at: string
+          daily_schedule: Json | null
+          id: string
+          main_goal: string
+          motivational_feedback: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          biggest_problem: string
+          commitment_score?: number | null
+          created_at?: string
+          daily_schedule?: Json | null
+          id?: string
+          main_goal: string
+          motivational_feedback?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          biggest_problem?: string
+          commitment_score?: number | null
+          created_at?: string
+          daily_schedule?: Json | null
+          id?: string
+          main_goal?: string
+          motivational_feedback?: string | null
           updated_at?: string
           user_id?: string
         }
