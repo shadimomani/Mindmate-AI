@@ -5,14 +5,20 @@ import { TaskList } from "@/components/dashboard/TaskList";
 import { HabitTracker } from "@/components/dashboard/HabitTracker";
 import { MoodTracker } from "@/components/dashboard/MoodTracker";
 import { ReflectionCard } from "@/components/dashboard/ReflectionCard";
+import { GoalsOnboarding } from "@/components/goals/GoalsOnboarding";
+import { PersonalizedPlan } from "@/components/goals/PersonalizedPlan";
 import { CheckCircle2, Flame, Target, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGoals } from "@/contexts/GoalsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import type { GoalsPlanData } from "@/components/goals/GoalsOnboarding";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { needsGoalsOnboarding, isLoading: goalsLoading, completeGoalsOnboarding, currentPlan } = useGoals();
   const [displayName, setDisplayName] = useState<string>("");
+  const [showPlan, setShowPlan] = useState<GoalsPlanData | null>(null);
   const [stats, setStats] = useState({
     tasksCompletedToday: 0,
     currentStreak: 0,
@@ -86,10 +92,50 @@ const Dashboard = () => {
     fetchStats();
   }, [user]);
 
+  const handleGoalsComplete = (plan: GoalsPlanData) => {
+    completeGoalsOnboarding(plan);
+    setShowPlan(plan);
+  };
+
+  // Show loading while checking goals status
+  if (goalsLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-pulse text-muted-foreground">Loading...</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show goals onboarding for new users
+  if (needsGoalsOnboarding) {
+    return (
+      <>
+        <DashboardLayout>
+          <div className="opacity-30 pointer-events-none">
+            <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+              <WelcomeCard displayName={displayName} />
+            </div>
+          </div>
+        </DashboardLayout>
+        <GoalsOnboarding onComplete={handleGoalsComplete} />
+      </>
+    );
+  }
+
+  // Plan to display (newly generated or from database)
+  const planToShow = showPlan || currentPlan;
+
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500">
         <WelcomeCard displayName={displayName} />
+
+        {/* Show personalized plan if available */}
+        {planToShow && (
+          <PersonalizedPlan plan={planToShow} />
+        )}
 
         <div 
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
