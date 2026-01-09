@@ -92,11 +92,12 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
         .eq('id', user.id);
 
       onComplete(analysisData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error analyzing goals:', error);
+      const message = error?.message || 'Please try again later.';
       toast({
-        title: 'Analysis failed',
-        description: 'Please try again later.',
+        title: language === 'ar' ? 'فشل التحليل' : 'Analysis failed',
+        description: message,
         variant: 'destructive',
       });
     } finally {
