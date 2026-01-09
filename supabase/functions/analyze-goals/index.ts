@@ -110,18 +110,36 @@ serve(async (req) => {
 
     const data = await response.json();
     console.log('AI response:', JSON.stringify(data));
-    
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall || toolCall.function.name !== 'create_personalized_plan') {
-      throw new Error('No valid tool call in AI response');
-    }
 
-    let parsedContent;
-    try {
-      parsedContent = JSON.parse(toolCall.function.arguments);
-    } catch {
-      console.error('Failed to parse tool call arguments:', toolCall.function.arguments);
-      throw new Error('Invalid AI response format');
+    // Prefer tool-calling (most reliable), but fallback to JSON in content just in case
+    const message = data.choices?.[0]?.message;
+
+    let parsedContent: unknown;
+
+    const toolCall = message?.tool_calls?.[0];
+    if (toolCall?.function?.name === 'create_personalized_plan') {
+      try {
+        parsedContent = JSON.parse(toolCall.function.arguments);
+      } catch {
+        console.error('Failed to parse tool call arguments:', toolCall.function.arguments);
+        throw new Error('Invalid AI response format');
+      }
+    } else if (typeof message?.content === 'string' && message.content.trim()) {
+      // Sometimes models return JSON directly in `content`
+      const raw = message.content.trim()
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/```$/i, '')
+        .trim();
+
+      try {
+        parsedContent = JSON.parse(raw);
+      } catch {
+        console.error('Failed to parse AI content:', message.content);
+        throw new Error('Invalid AI response format');
+      }
+    } else {
+      throw new Error('No valid tool call in AI response');
     }
 
     return new Response(JSON.stringify(parsedContent), {
