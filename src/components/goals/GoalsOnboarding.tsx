@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ArrowRight, Target, Brain, Sparkles } from 'lucide-react';
+import { Loader2, ArrowRight, Target, Brain, Sparkles, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GoalsOnboardingProps {
   onComplete: (data: GoalsPlanData) => void;
@@ -36,21 +37,22 @@ export interface GoalsPlanData {
 export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { language, setLanguage } = useLanguage();
   const [step, setStep] = useState(1);
   const [biggestProblem, setBiggestProblem] = useState('');
   const [mainGoal, setMainGoal] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const totalSteps = 3;
+  const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
 
   const handleNext = () => {
-    if (step === 1 && !biggestProblem.trim()) {
-      toast({ title: 'Please describe your biggest problem', variant: 'destructive' });
+    if (step === 2 && !biggestProblem.trim()) {
+      toast({ title: language === 'ar' ? 'يرجى وصف مشكلتك الكبرى' : 'Please describe your biggest problem', variant: 'destructive' });
       return;
     }
-    if (step === 2 && !mainGoal.trim()) {
-      toast({ title: 'Please describe your main goal', variant: 'destructive' });
+    if (step === 3 && !mainGoal.trim()) {
+      toast({ title: language === 'ar' ? 'يرجى وصف هدفك الرئيسي' : 'Please describe your main goal', variant: 'destructive' });
       return;
     }
     setStep(step + 1);
@@ -138,20 +140,30 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
                 className="space-y-6"
               >
                 <div className="flex items-center gap-3 text-primary">
-                  <Target className="w-8 h-8" />
+                  <Globe className="w-8 h-8" />
                   <div>
-                    <h3 className="text-xl font-semibold">What's holding you back?</h3>
-                    <p className="text-sm text-muted-foreground">Describe your biggest challenge right now</p>
+                    <h3 className="text-xl font-semibold">Choose Your Language</h3>
+                    <p className="text-sm text-muted-foreground">اختر لغتك المفضلة</p>
                   </div>
                 </div>
-                <Textarea
-                  placeholder="e.g., I struggle with procrastination and can't seem to focus on important tasks..."
-                  value={biggestProblem}
-                  onChange={(e) => setBiggestProblem(e.target.value)}
-                  className="min-h-[120px] resize-none"
-                  maxLength={500}
-                />
-                <p className="text-xs text-muted-foreground text-right">{biggestProblem.length}/500</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant={language === 'en' ? 'default' : 'outline'}
+                    className="h-24 flex flex-col gap-2"
+                    onClick={() => setLanguage('en')}
+                  >
+                    <span className="text-2xl">🇺🇸</span>
+                    <span>English</span>
+                  </Button>
+                  <Button
+                    variant={language === 'ar' ? 'default' : 'outline'}
+                    className="h-24 flex flex-col gap-2"
+                    onClick={() => setLanguage('ar')}
+                  >
+                    <span className="text-2xl">🇸🇦</span>
+                    <span>العربية</span>
+                  </Button>
+                </div>
               </motion.div>
             )}
 
@@ -166,20 +178,27 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
                 className="space-y-6"
               >
                 <div className="flex items-center gap-3 text-primary">
-                  <Sparkles className="w-8 h-8" />
+                  <Target className="w-8 h-8" />
                   <div>
-                    <h3 className="text-xl font-semibold">What do you want to achieve?</h3>
-                    <p className="text-sm text-muted-foreground">Describe your main goal</p>
+                    <h3 className="text-xl font-semibold">
+                      {language === 'ar' ? 'ما الذي يعيقك؟' : "What's holding you back?"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'ar' ? 'صف أكبر تحدٍ تواجهه الآن' : 'Describe your biggest challenge right now'}
+                    </p>
                   </div>
                 </div>
                 <Textarea
-                  placeholder="e.g., I want to become more productive, finish my projects on time, and have a better work-life balance..."
-                  value={mainGoal}
-                  onChange={(e) => setMainGoal(e.target.value)}
+                  placeholder={language === 'ar' 
+                    ? 'مثال: أعاني من التسويف ولا أستطيع التركيز على المهام المهمة...'
+                    : 'e.g., I struggle with procrastination and can\'t seem to focus on important tasks...'}
+                  value={biggestProblem}
+                  onChange={(e) => setBiggestProblem(e.target.value)}
                   className="min-h-[120px] resize-none"
                   maxLength={500}
+                  dir={language === 'ar' ? 'rtl' : 'ltr'}
                 />
-                <p className="text-xs text-muted-foreground text-right">{mainGoal.length}/500</p>
+                <p className="text-xs text-muted-foreground text-right">{biggestProblem.length}/500</p>
               </motion.div>
             )}
 
@@ -194,21 +213,64 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
                 className="space-y-6"
               >
                 <div className="flex items-center gap-3 text-primary">
+                  <Sparkles className="w-8 h-8" />
+                  <div>
+                    <h3 className="text-xl font-semibold">
+                      {language === 'ar' ? 'ما الذي تريد تحقيقه؟' : 'What do you want to achieve?'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'ar' ? 'صف هدفك الرئيسي' : 'Describe your main goal'}
+                    </p>
+                  </div>
+                </div>
+                <Textarea
+                  placeholder={language === 'ar'
+                    ? 'مثال: أريد أن أصبح أكثر إنتاجية، وأنهي مشاريعي في الوقت المحدد...'
+                    : 'e.g., I want to become more productive, finish my projects on time, and have a better work-life balance...'}
+                  value={mainGoal}
+                  onChange={(e) => setMainGoal(e.target.value)}
+                  className="min-h-[120px] resize-none"
+                  maxLength={500}
+                  dir={language === 'ar' ? 'rtl' : 'ltr'}
+                />
+                <p className="text-xs text-muted-foreground text-right">{mainGoal.length}/500</p>
+              </motion.div>
+            )}
+
+            {step === 4 && (
+              <motion.div
+                key="step4"
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                <div className="flex items-center gap-3 text-primary">
                   <Brain className="w-8 h-8" />
                   <div>
-                    <h3 className="text-xl font-semibold">Ready for your personalized plan?</h3>
-                    <p className="text-sm text-muted-foreground">AI will analyze your inputs and create a daily schedule</p>
+                    <h3 className="text-xl font-semibold">
+                      {language === 'ar' ? 'هل أنت جاهز لخطتك المخصصة؟' : 'Ready for your personalized plan?'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'ar' ? 'سيحلل الذكاء الاصطناعي مدخلاتك ويُنشئ جدولاً يومياً' : 'AI will analyze your inputs and create a daily schedule'}
+                    </p>
                   </div>
                 </div>
                 
                 <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Your Challenge:</p>
-                    <p className="text-sm">{biggestProblem}</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {language === 'ar' ? 'تحديك:' : 'Your Challenge:'}
+                    </p>
+                    <p className="text-sm" dir={language === 'ar' ? 'rtl' : 'ltr'}>{biggestProblem}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Your Goal:</p>
-                    <p className="text-sm">{mainGoal}</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {language === 'ar' ? 'هدفك:' : 'Your Goal:'}
+                    </p>
+                    <p className="text-sm" dir={language === 'ar' ? 'rtl' : 'ltr'}>{mainGoal}</p>
                   </div>
                 </div>
 
@@ -219,7 +281,9 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
                     className="flex flex-col items-center gap-4 py-8"
                   >
                     <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">Creating your personalized plan...</p>
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'ar' ? 'جاري إنشاء خطتك المخصصة...' : 'Creating your personalized plan...'}
+                    </p>
                   </motion.div>
                 )}
               </motion.div>
@@ -231,14 +295,14 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
         <div className="p-6 border-t bg-muted/30 flex justify-between">
           {step > 1 && !isAnalyzing && (
             <Button variant="ghost" onClick={() => setStep(step - 1)}>
-              Back
+              {language === 'ar' ? 'رجوع' : 'Back'}
             </Button>
           )}
           {step === 1 && <div />}
           
-          {step < 3 ? (
+          {step < 4 ? (
             <Button onClick={handleNext} className="gap-2">
-              Next <ArrowRight className="w-4 h-4" />
+              {language === 'ar' ? 'التالي' : 'Next'} <ArrowRight className="w-4 h-4" />
             </Button>
           ) : (
             <Button 
@@ -249,11 +313,11 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
               {isAnalyzing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Analyzing...
+                  {language === 'ar' ? 'جاري التحليل...' : 'Analyzing...'}
                 </>
               ) : (
                 <>
-                  Generate My Plan <Sparkles className="w-4 h-4" />
+                  {language === 'ar' ? 'إنشاء خطتي' : 'Generate My Plan'} <Sparkles className="w-4 h-4" />
                 </>
               )}
             </Button>
