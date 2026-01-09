@@ -79,7 +79,7 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
           main_goal: mainGoal,
           ai_analysis: analysisData.analysis,
           daily_schedule: analysisData.daily_schedule,
-          commitment_score: analysisData.commitment_score,
+          commitment_score: Math.round(analysisData.commitment_score),
           motivational_feedback: analysisData.motivational_feedback,
         });
 
