@@ -18,30 +18,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an expert productivity coach and time management specialist. Analyze the user's problem and goal to create a personalized daily plan.
-
-You must respond with a JSON object containing:
-1. "analysis" - An object with:
-   - "time_management_issues": array of identified time management problems
-   - "motivation_level": "low" | "medium" | "high"
-   - "commitment_gaps": array of potential commitment challenges
-
-2. "daily_schedule" - An array of schedule items, each with:
-   - "time": string (e.g., "6:00 AM")
-   - "activity": string
-   - "duration": string (e.g., "30 min")
-   - "priority": "high" | "medium" | "low"
-
-3. "task_priorities" - An array of prioritized tasks with:
-   - "task": string
-   - "priority": "high" | "medium" | "low"
-   - "reason": string
-
-4. "commitment_score" - A number from 1-10 based on their stated goals
-
-5. "motivational_feedback" - A short, calm, professional motivational message (2-3 sentences)
-
-Be specific, actionable, and encouraging. Create a realistic schedule that addresses their stated problem and moves them toward their goal.`;
+    const systemPrompt = `You are an expert productivity coach and time management specialist. Analyze the user's problem and goal to create a personalized daily plan. Be specific, actionable, and encouraging. Create a realistic schedule that addresses their stated problem and moves them toward their goal.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -58,7 +35,58 @@ Be specific, actionable, and encouraging. Create a realistic schedule that addre
             content: `My biggest problem right now: ${biggest_problem}\n\nMy main goal: ${main_goal}` 
           }
         ],
-        response_format: { type: "json_object" }
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "create_personalized_plan",
+              description: "Create a personalized productivity plan based on user's problem and goal",
+              parameters: {
+                type: "object",
+                properties: {
+                  analysis: {
+                    type: "object",
+                    properties: {
+                      time_management_issues: { type: "array", items: { type: "string" } },
+                      motivation_level: { type: "string", enum: ["low", "medium", "high"] },
+                      commitment_gaps: { type: "array", items: { type: "string" } }
+                    },
+                    required: ["time_management_issues", "motivation_level", "commitment_gaps"]
+                  },
+                  daily_schedule: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        time: { type: "string" },
+                        activity: { type: "string" },
+                        duration: { type: "string" },
+                        priority: { type: "string", enum: ["high", "medium", "low"] }
+                      },
+                      required: ["time", "activity", "duration", "priority"]
+                    }
+                  },
+                  task_priorities: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        task: { type: "string" },
+                        priority: { type: "string", enum: ["high", "medium", "low"] },
+                        reason: { type: "string" }
+                      },
+                      required: ["task", "priority", "reason"]
+                    }
+                  },
+                  commitment_score: { type: "number", minimum: 1, maximum: 10 },
+                  motivational_feedback: { type: "string" }
+                },
+                required: ["analysis", "daily_schedule", "task_priorities", "commitment_score", "motivational_feedback"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "create_personalized_plan" } }
       }),
     });
 
@@ -81,17 +109,18 @@ Be specific, actionable, and encouraging. Create a realistic schedule that addre
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    console.log('AI response:', JSON.stringify(data));
     
-    if (!content) {
-      throw new Error('No content in AI response');
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall || toolCall.function.name !== 'create_personalized_plan') {
+      throw new Error('No valid tool call in AI response');
     }
 
     let parsedContent;
     try {
-      parsedContent = JSON.parse(content);
+      parsedContent = JSON.parse(toolCall.function.arguments);
     } catch {
-      console.error('Failed to parse AI response:', content);
+      console.error('Failed to parse tool call arguments:', toolCall.function.arguments);
       throw new Error('Invalid AI response format');
     }
 
