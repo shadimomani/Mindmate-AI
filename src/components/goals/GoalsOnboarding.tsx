@@ -60,12 +60,22 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
 
   const formatErrorMessage = (err: unknown) => {
     const anyErr = err as any;
-    return (
+
+    const base =
       anyErr?.message ||
       anyErr?.error_description ||
       anyErr?.details ||
-      (typeof err === 'string' ? err : 'Please try again later.')
-    );
+      (typeof err === 'string' ? err : 'Please try again later.');
+
+    const status = anyErr?.context?.status;
+    const body = anyErr?.context?.body;
+
+    if (status || body) {
+      const bodyText = typeof body === 'string' ? body : body ? JSON.stringify(body) : '';
+      return `${base}${status ? ` (status ${status})` : ''}${bodyText ? `: ${bodyText}` : ''}`;
+    }
+
+    return base;
   };
 
   const assertValidPlan = (data: any): data is GoalsPlanData => {
