@@ -27,7 +27,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: systemPrompt },
           { 
@@ -114,32 +114,87 @@ serve(async (req) => {
     // Prefer tool-calling (most reliable), but fallback to JSON in content just in case
     const message = data.choices?.[0]?.message;
 
-    let parsedContent: unknown;
-
-    const toolCall = message?.tool_calls?.[0];
-    if (toolCall?.function?.name === 'create_personalized_plan') {
-      try {
-        parsedContent = JSON.parse(toolCall.function.arguments);
-      } catch {
-        console.error('Failed to parse tool call arguments:', toolCall.function.arguments);
-        throw new Error('Invalid AI response format');
-      }
-    } else if (typeof message?.content === 'string' && message.content.trim()) {
-      // Sometimes models return JSON directly in `content`
-      const raw = message.content.trim()
+    const stripJsonFences = (s: string) =>
+      s
+        .trim()
         .replace(/^```json\s*/i, '')
         .replace(/^```\s*/i, '')
         .replace(/```$/i, '')
         .trim();
 
+    const safeParseJson = (input: unknown): unknown => {
+      if (input == null) return null;
+      if (typeof input === 'object') return input;
+      if (typeof input !== 'string') return null;
+
+      const cleaned = stripJsonFences(input);
       try {
-        parsedContent = JSON.parse(raw);
+        return JSON.parse(cleaned);
       } catch {
+        // Last-resort: try to extract the first JSON object/array from the text
+        const firstObj = cleaned.indexOf('{');
+        const lastObj = cleaned.lastIndexOf('}');
+        if (firstObj !== -1 && lastObj !== -1 && lastObj > firstObj) {
+          const maybe = cleaned.slice(firstObj, lastObj + 1);
+          try {
+            return JSON.parse(maybe);
+          } catch {
+            return null;
+          }
+        }
+
+        const firstArr = cleaned.indexOf('[');
+        const lastArr = cleaned.lastIndexOf(']');
+        if (firstArr !== -1 && lastArr !== -1 && lastArr > firstArr) {
+          const maybe = cleaned.slice(firstArr, lastArr + 1);
+          try {
+            return JSON.parse(maybe);
+          } catch {
+            return null;
+          }
+        }
+
+        return null;
+      }
+    };
+
+    const toolCall = message?.tool_calls?.[0];
+
+    // Helpful debug context (no secrets)
+    console.log('AI message keys:', message ? Object.keys(message) : null);
+    console.log('AI has tool_calls:', !!message?.tool_calls);
+
+    let parsedContent: any = null;
+
+    if (toolCall?.function?.name === 'create_personalized_plan') {
+      // Some providers return arguments as a string, others as an object
+      parsedContent = safeParseJson((toolCall as any).function?.arguments);
+      if (!parsedContent) {
+        console.error('Failed to parse tool call arguments:', (toolCall as any).function?.arguments);
+        throw new Error('Invalid AI response format');
+      }
+    } else if (typeof message?.content === 'string' && message.content.trim()) {
+      parsedContent = safeParseJson(message.content);
+      if (!parsedContent) {
         console.error('Failed to parse AI content:', message.content);
         throw new Error('Invalid AI response format');
       }
     } else {
+      console.error('No tool call or content. Full message:', JSON.stringify(message));
       throw new Error('No valid tool call in AI response');
+    }
+
+    // Minimal shape check (prevents saving junk)
+    if (
+      !parsedContent ||
+      typeof parsedContent !== 'object' ||
+      typeof parsedContent.commitment_score !== 'number' ||
+      !parsedContent.analysis ||
+      !Array.isArray(parsedContent.daily_schedule) ||
+      typeof parsedContent.motivational_feedback !== 'string'
+    ) {
+      console.error('Parsed content failed shape check:', JSON.stringify(parsedContent));
+      throw new Error('Invalid AI response format');
     }
 
     return new Response(JSON.stringify(parsedContent), {
