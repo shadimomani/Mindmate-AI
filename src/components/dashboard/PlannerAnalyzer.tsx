@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOnboarding, ONBOARDING_STEPS } from "@/contexts/OnboardingContext";
 import { format } from "date-fns";
 
 interface PlannerAnalysis {
@@ -35,7 +34,6 @@ export const PlannerAnalyzer = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { language } = useLanguage();
   const { user } = useAuth();
-  const { isOnboarding, currentStep, triggerStep } = useOnboarding();
 
   const translations = {
     en: {
@@ -153,11 +151,6 @@ export const PlannerAnalyzer = () => {
 
       setAnalysis(data);
       toast.success(language === 'ar' ? 'تم تحليل صفحة المخطط بنجاح!' : 'Planner page analyzed successfully!');
-      
-      // Trigger AI results step after successful analysis
-      if (isOnboarding && currentStep === ONBOARDING_STEPS.PAGE_CODE_SAMPLE) {
-        setTimeout(() => triggerStep(ONBOARDING_STEPS.AI_RESULTS), 500);
-      }
     } catch (error: any) {
       console.error('Analysis error:', error);
       toast.error(error.message || (language === 'ar' ? 'فشل في تحليل الصفحة' : 'Failed to analyze page'));
@@ -253,10 +246,7 @@ export const PlannerAnalyzer = () => {
       )}
       
       {data.page_code && (
-        <div 
-          className="flex justify-between items-center py-2 border-b border-border"
-          data-onboarding="page-code"
-        >
+        <div className="flex justify-between items-center py-2 border-b border-border">
           <span className="text-muted-foreground">{t.pageCode}</span>
           <span className="font-mono text-sm">{data.page_code}</span>
         </div>
@@ -369,10 +359,7 @@ export const PlannerAnalyzer = () => {
                 />
                 
                 {previewImage && (
-                  <div 
-                    className="relative rounded-lg overflow-hidden"
-                    data-onboarding="upload-area"
-                  >
+                  <div className="relative rounded-lg overflow-hidden">
                     <img 
                       src={previewImage} 
                       alt="Planner preview" 
@@ -394,7 +381,6 @@ export const PlannerAnalyzer = () => {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isAnalyzing}
                     className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-                    data-onboarding="upload-button"
                   >
                     {isAnalyzing ? (
                       <>
@@ -413,7 +399,7 @@ export const PlannerAnalyzer = () => {
             )}
 
             {analysis && (
-              <div className="space-y-4" data-onboarding="ai-results">
+              <div className="space-y-4">
                 <h3 className="font-semibold text-foreground">{t.results}</h3>
                 
                 {renderAnalysisCard(analysis)}
