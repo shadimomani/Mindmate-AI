@@ -58,46 +58,79 @@ export const GoalsOnboarding: React.FC<GoalsOnboardingProps> = ({ onComplete }) 
     setStep(step + 1);
   };
 
+  const formatErrorMessage = (err: unknown) => {
+    const anyErr = err as any;
+    return (
+      anyErr?.message ||
+      anyErr?.error_description ||
+      anyErr?.details ||
+      (typeof err === 'string' ? err : 'Please try again later.')
+    );
+  };
+
+  const assertValidPlan = (data: any): data is GoalsPlanData => {
+    return (
+      !!data &&
+      typeof data === 'object' &&
+      typeof data.commitment_score === 'number' &&
+      typeof data.motivational_feedback === 'string' &&
+      Array.isArray(data.daily_schedule) &&
+      !!data.analysis &&
+      Array.isArray(data.analysis.time_management_issues) &&
+      Array.isArray(data.analysis.commitment_gaps)
+    );
+  };
+
   const handleAnalyze = async () => {
     if (!user) return;
-    
+
     setIsAnalyzing(true);
     try {
-      // Call AI analysis
+      // 1) Call AI analysis
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-goals', {
-        body: { biggest_problem: biggestProblem, main_goal: mainGoal }
+        body: { biggest_problem: biggestProblem, main_goal: mainGoal },
       });
 
-      if (analysisError) throw analysisError;
+      if (analysisError) {
+        throw new Error(`AI analysis failed: ${formatErrorMessage(analysisError)}`);
+      }
 
-      // Store in database
-      const { error: insertError } = await supabase
-        .from('user_goals')
-        .upsert({
-          user_id: user.id,
-          biggest_problem: biggestProblem,
-          main_goal: mainGoal,
-          ai_analysis: analysisData.analysis,
-          daily_schedule: analysisData.daily_schedule,
-          commitment_score: Math.round(analysisData.commitment_score),
-          motivational_feedback: analysisData.motivational_feedback,
-        });
+      if (!assertValidPlan(analysisData)) {
+        console.error('Invalid plan payload received:', analysisData);
+        throw new Error('AI returned an invalid plan format. Please try again.');
+      }
 
-      if (insertError) throw insertError;
+      // 2) Store in database
+      const { error: upsertError } = await supabase.from('user_goals').upsert({
+        user_id: user.id,
+        biggest_problem: biggestProblem,
+        main_goal: mainGoal,
+        ai_analysis: analysisData.analysis,
+        daily_schedule: analysisData.daily_schedule,
+        commitment_score: Math.round(analysisData.commitment_score),
+        motivational_feedback: analysisData.motivational_feedback,
+      });
 
-      // Mark goals as completed
-      await supabase
+      if (upsertError) {
+        throw new Error(`Saving plan failed: ${formatErrorMessage(upsertError)}`);
+      }
+
+      // 3) Mark goals as completed
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ goals_completed: true })
         .eq('id', user.id);
 
+      if (profileError) {
+        throw new Error(`Updating profile failed: ${formatErrorMessage(profileError)}`);
+      }
+
       onComplete(analysisData);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error analyzing goals:', error);
-      const message = error?.message || 'Please try again later.';
       toast({
         title: language === 'ar' ? 'فشل التحليل' : 'Analysis failed',
-        description: message,
+        description: formatErrorMessage(error),
         variant: 'destructive',
       });
     } finally {
