@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
+import { WelcomeBanner } from "@/components/dashboard/WelcomeBanner";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { TaskList } from "@/components/dashboard/TaskList";
 import { HabitTracker } from "@/components/dashboard/HabitTracker";
@@ -89,6 +90,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500">
+        <WelcomeBanner />
         <WelcomeCard displayName={displayName} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">

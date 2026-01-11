@@ -185,6 +185,13 @@ export const translations: Translations = {
     en: "Commit your work to the Lord, and your plans will be established.",
     ar: "ألقِ على الرب أعمالك فتثبت أفكارك."
   },
+
+  // Welcome Banner
+  welcomeTitle: { en: "Welcome to MindMate!", ar: "مرحباً بك في مايند ميت!" },
+  welcomeSubtitle: { en: "Here are a few tips to get started:", ar: "إليك بعض النصائح للبدء:" },
+  tipTasks: { en: "Add tasks to stay organized", ar: "أضف مهام لتبقى منظماً" },
+  tipHabits: { en: "Track habits to build routines", ar: "تتبع العادات لبناء روتين" },
+  tipAI: { en: "Chat with AI for support", ar: "تحدث مع الذكاء الاصطناعي للدعم" },
 };
 
 interface LanguageContextType {
