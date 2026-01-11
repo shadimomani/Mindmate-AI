@@ -196,6 +196,80 @@ export const translations: Translations = {
   resetWelcomeBannerDescription: { en: "Show the welcome tips again on dashboard", ar: "إظهار نصائح الترحيب مرة أخرى في لوحة التحكم" },
   welcomeBannerReset: { en: "Welcome banner will appear on next dashboard visit", ar: "سيظهر شريط الترحيب في الزيارة القادمة للوحة التحكم" },
   reset: { en: "Reset", ar: "إعادة تعيين" },
+
+  // Guide Page
+  guide: { en: "Guide", ar: "الدليل" },
+  guideTitle: { en: "User Guide", ar: "دليل المستخدم" },
+  guideSubtitle: { en: "Learn how to use MindMate to boost your productivity", ar: "تعلم كيفية استخدام مايند ميت لتعزيز إنتاجيتك" },
+  guideGettingStarted: { en: "Getting Started", ar: "البداية" },
+  guideStep1: { en: "Set your daily goals and priorities", ar: "حدد أهدافك وأولوياتك اليومية" },
+  guideStep2: { en: "Add tasks to your daily planner", ar: "أضف المهام إلى مخططك اليومي" },
+  guideStep3: { en: "Track your habits consistently", ar: "تتبع عاداتك باستمرار" },
+  guideStep4: { en: "Chat with AI for motivation and support", ar: "تحدث مع الذكاء الاصطناعي للتحفيز والدعم" },
+  guideFeaturesTitle: { en: "Features Overview", ar: "نظرة عامة على الميزات" },
+  
+  // Dashboard Guide
+  guideDashboardTitle: { en: "Dashboard", ar: "لوحة التحكم" },
+  guideDashboardDesc: { en: "Your central hub for daily productivity overview", ar: "مركزك الرئيسي لنظرة عامة على الإنتاجية اليومية" },
+  guideDashboardTip1: { en: "View your daily tasks and progress at a glance", ar: "عرض مهامك اليومية وتقدمك بنظرة سريعة" },
+  guideDashboardTip2: { en: "Check your current streak and motivation", ar: "تحقق من سلسلتك الحالية وتحفيزك" },
+  guideDashboardTip3: { en: "Track your mood throughout the day", ar: "تتبع مزاجك طوال اليوم" },
+  
+  // Planner Guide
+  guidePlannerTitle: { en: "Daily Planner", ar: "المخطط اليومي" },
+  guidePlannerDesc: { en: "Plan and organize your daily tasks", ar: "خطط ونظم مهامك اليومية" },
+  guidePlannerTip1: { en: "Add tasks with priorities (high, medium, low)", ar: "أضف مهام مع الأولويات (عالية، متوسطة، منخفضة)" },
+  guidePlannerTip2: { en: "Check off tasks as you complete them", ar: "ضع علامة على المهام عند إكمالها" },
+  guidePlannerTip3: { en: "Use AI to analyze your planner photos", ar: "استخدم الذكاء الاصطناعي لتحليل صور مخططك" },
+  
+  // Habits Guide
+  guideHabitsTitle: { en: "Habits", ar: "العادات" },
+  guideHabitsDesc: { en: "Build positive habits and track your streaks", ar: "ابنِ عادات إيجابية وتتبع سلسلاتك" },
+  guideHabitsTip1: { en: "Create habits you want to build", ar: "أنشئ عادات تريد بناءها" },
+  guideHabitsTip2: { en: "Mark habits complete daily to build streaks", ar: "ضع علامة على العادات يومياً لبناء السلاسل" },
+  guideHabitsTip3: { en: "View your habit statistics and progress", ar: "عرض إحصائيات وتقدم عاداتك" },
+  
+  // Reflections Guide
+  guideReflectionsTitle: { en: "Reflections", ar: "التأملات" },
+  guideReflectionsDesc: { en: "Daily journaling for self-improvement", ar: "التدوين اليومي لتحسين الذات" },
+  guideReflectionsTip1: { en: "Answer daily reflection questions", ar: "أجب على أسئلة التأمل اليومية" },
+  guideReflectionsTip2: { en: "Review past reflections for insights", ar: "راجع التأملات السابقة للحصول على رؤى" },
+  guideReflectionsTip3: { en: "Build a habit of gratitude and mindfulness", ar: "ابنِ عادة الامتنان واليقظة الذهنية" },
+  
+  // Insights Guide
+  guideInsightsTitle: { en: "Insights", ar: "الرؤى" },
+  guideInsightsDesc: { en: "View your productivity analytics", ar: "عرض تحليلات إنتاجيتك" },
+  guideInsightsTip1: { en: "See weekly task completion statistics", ar: "عرض إحصائيات إكمال المهام الأسبوعية" },
+  guideInsightsTip2: { en: "Track your most productive days", ar: "تتبع أيامك الأكثر إنتاجية" },
+  guideInsightsTip3: { en: "Monitor your overall progress trends", ar: "راقب اتجاهات تقدمك العام" },
+  
+  // Photos Guide
+  guidePhotosTitle: { en: "Photos", ar: "الصور" },
+  guidePhotosDesc: { en: "Store and organize your memories", ar: "خزّن ونظم ذكرياتك" },
+  guidePhotosTip1: { en: "Upload photos to your personal gallery", ar: "ارفع صوراً إلى معرضك الشخصي" },
+  guidePhotosTip2: { en: "Keep visual records of your journey", ar: "احتفظ بسجلات مرئية لرحلتك" },
+  
+  // AI Guide
+  guideAITitle: { en: "AI Assistant", ar: "المساعد الذكي" },
+  guideAIDesc: { en: "Get personalized support and motivation", ar: "احصل على دعم وتحفيز مخصص" },
+  guideAITip1: { en: "Ask questions about productivity", ar: "اطرح أسئلة عن الإنتاجية" },
+  guideAITip2: { en: "Get motivational support and advice", ar: "احصل على دعم ونصائح تحفيزية" },
+  guideAITip3: { en: "Upload images for AI analysis", ar: "ارفع صوراً لتحليل الذكاء الاصطناعي" },
+  
+  // Profile Guide
+  guideProfileTitle: { en: "Profile", ar: "الملف الشخصي" },
+  guideProfileDesc: { en: "Manage your account settings", ar: "إدارة إعدادات حسابك" },
+  guideProfileTip1: { en: "Update your display name and bio", ar: "حدّث اسم العرض والنبذة عنك" },
+  guideProfileTip2: { en: "Upload a profile picture", ar: "ارفع صورة شخصية" },
+  guideProfileTip3: { en: "Toggle dark mode and language settings", ar: "بدّل الوضع الداكن وإعدادات اللغة" },
+  
+  // Pro Tips
+  guideProTipsTitle: { en: "Pro Tips", ar: "نصائح احترافية" },
+  guideProTip1: { en: "Start each day by setting your top 3 priorities", ar: "ابدأ كل يوم بتحديد أهم 3 أولويات" },
+  guideProTip2: { en: "Complete habits at the same time daily for consistency", ar: "أكمل العادات في نفس الوقت يومياً للاستمرارية" },
+  guideProTip3: { en: "Use reflections to track your emotional well-being", ar: "استخدم التأملات لتتبع صحتك النفسية" },
+  guideProTip4: { en: "Review your insights weekly to spot patterns", ar: "راجع رؤاك أسبوعياً لاكتشاف الأنماط" },
+  guideProTip5: { en: "Chat with AI when you need motivation or guidance", ar: "تحدث مع الذكاء الاصطناعي عندما تحتاج تحفيزاً أو توجيهاً" },
 };
 
 interface LanguageContextType {

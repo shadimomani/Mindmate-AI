@@ -1,4 +1,4 @@
-import { Home, CheckSquare, Heart, MessageCircle, BarChart3, User, Brain, Image, LogOut } from "lucide-react";
+import { Home, CheckSquare, Heart, MessageCircle, BarChart3, User, Brain, Image, LogOut, BookOpen } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +31,7 @@ export const AppSidebar = () => {
     { name: t('reflections'), href: "/reflections", icon: MessageCircle },
     { name: t('insights'), href: "/insights", icon: BarChart3 },
     { name: t('photos'), href: "/photos", icon: Image },
+    { name: t('guide'), href: "/guide", icon: BookOpen },
     { name: t('profile'), href: "/profile", icon: User },
   ];
 
