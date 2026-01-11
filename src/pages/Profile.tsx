@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { User, Camera } from "lucide-react";
+import { User, Camera, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -267,6 +267,28 @@ const Profile = () => {
                 onCheckedChange={(checked) => setLanguage(checked ? "ar" : "en")}
                 className="shrink-0"
               />
+            </div>
+
+            <div className="flex items-center justify-between gap-4 py-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm sm:text-base">{t('showWelcomeBanner')}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{t('resetWelcomeBannerDescription')}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  localStorage.removeItem("mindmate_welcome_dismissed");
+                  toast({
+                    title: t('success'),
+                    description: t('welcomeBannerReset'),
+                  });
+                }}
+                className="shrink-0 gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                {t('reset')}
+              </Button>
             </div>
           </div>
 

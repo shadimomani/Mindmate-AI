@@ -192,6 +192,10 @@ export const translations: Translations = {
   tipTasks: { en: "Add tasks to stay organized", ar: "أضف مهام لتبقى منظماً" },
   tipHabits: { en: "Track habits to build routines", ar: "تتبع العادات لبناء روتين" },
   tipAI: { en: "Chat with AI for support", ar: "تحدث مع الذكاء الاصطناعي للدعم" },
+  showWelcomeBanner: { en: "Welcome Banner", ar: "شريط الترحيب" },
+  resetWelcomeBannerDescription: { en: "Show the welcome tips again on dashboard", ar: "إظهار نصائح الترحيب مرة أخرى في لوحة التحكم" },
+  welcomeBannerReset: { en: "Welcome banner will appear on next dashboard visit", ar: "سيظهر شريط الترحيب في الزيارة القادمة للوحة التحكم" },
+  reset: { en: "Reset", ar: "إعادة تعيين" },
 };
 
 interface LanguageContextType {
