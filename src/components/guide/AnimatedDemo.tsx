@@ -126,22 +126,25 @@ const HabitDemo = () => {
 };
 
 const ChatDemo = () => {
-  const [messages, setMessages] = useState<{ role: string; text: string }[]>([]);
   const conversation = [
     { role: "user", text: "How can I stay motivated?" },
     { role: "ai", text: "Start small, celebrate wins! 🎉" },
   ];
+  
+  const [messages, setMessages] = useState<{ role: string; text: string }[]>([]);
+  const [messageIndex, setMessageIndex] = useState(0);
 
   useEffect(() => {
-    let i = 0;
     const interval = setInterval(() => {
-      if (i < conversation.length) {
-        setMessages((m) => [...m, conversation[i]]);
-        i++;
-      } else {
-        setMessages([]);
-        i = 0;
-      }
+      setMessageIndex((prevIndex) => {
+        if (prevIndex < conversation.length) {
+          setMessages((m) => [...m, conversation[prevIndex]]);
+          return prevIndex + 1;
+        } else {
+          setMessages([]);
+          return 0;
+        }
+      });
     }, 2000);
     return () => clearInterval(interval);
   }, []);
@@ -149,22 +152,24 @@ const ChatDemo = () => {
   return (
     <div className="bg-card/80 rounded-lg p-3 space-y-2 min-h-[100px]">
       {messages.map((msg, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, y: 10, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-        >
-          <div
-            className={`px-3 py-1.5 rounded-lg max-w-[80%] ${
-              msg.role === "user"
-                ? "bg-accent text-accent-foreground"
-                : "bg-muted text-foreground"
-            }`}
+        msg && (
+          <motion.div
+            key={`${i}-${msg.text}`}
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
-            <span className="text-xs">{msg.text}</span>
-          </div>
-        </motion.div>
+            <div
+              className={`px-3 py-1.5 rounded-lg max-w-[80%] ${
+                msg.role === "user"
+                  ? "bg-accent text-accent-foreground"
+                  : "bg-muted text-foreground"
+              }`}
+            >
+              <span className="text-xs">{msg.text}</span>
+            </div>
+          </motion.div>
+        )
       ))}
       <motion.div
         animate={{ opacity: [0.3, 0.7, 0.3] }}
