@@ -7,7 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const systemPrompt = `You are an AI specialized in analyzing planner pages.
+// Function to generate adaptive system prompt based on learning profile
+function generateSystemPrompt(learningProfile: any): string {
+  const basePrompt = `You are an AI specialized in analyzing planner pages.
 
 You will be given an image of a daily planner page.
 
@@ -22,7 +24,42 @@ Schema keys:
 - "notes": string with any additional notes or reflections written by the user (empty string if none)
 - "completion_rate": number between 0 and 100 indicating % of tasks completed
 - "commitment_score": number between 0 and 10 evaluating user's commitment to their planner goals (10 = highest commitment)
-- "feedback_message": a short motivational message encouraging the user based on their commitment score
+- "feedback_message": a short motivational message encouraging the user based on their commitment score`;
+
+  // Add learning-based context if available
+  let adaptiveContext = "";
+  
+  if (learningProfile) {
+    adaptiveContext = `\n\nUSER LEARNING CONTEXT (use this to calibrate your assessment):`;
+    
+    if (learningProfile.avg_completion_rate > 0) {
+      adaptiveContext += `\n- User's historical average completion rate: ${learningProfile.avg_completion_rate.toFixed(1)}%`;
+    }
+    
+    if (learningProfile.overplanning_detected) {
+      adaptiveContext += `\n- This user tends to overplan. Be encouraging even for partial completion.`;
+    }
+    
+    if (learningProfile.optimistic_bias) {
+      adaptiveContext += `\n- Your past predictions have been optimistic. Calibrate commitment scores more conservatively.`;
+    }
+    
+    if (learningProfile.motivation_drop_pattern) {
+      adaptiveContext += `\n- User shows declining motivation. Use extra encouraging and supportive language in feedback.`;
+    }
+    
+    if (learningProfile.task_complexity_too_high) {
+      adaptiveContext += `\n- Tasks have historically been too complex. Acknowledge difficulty and suggest breaking down tasks.`;
+    }
+    
+    if (learningProfile.recommended_tone === "encouraging") {
+      adaptiveContext += `\n- Use a warm, encouraging tone in feedback_message.`;
+    } else if (learningProfile.recommended_tone === "challenging") {
+      adaptiveContext += `\n- Gently challenge user to push harder in feedback_message.`;
+    }
+  }
+
+  const closingPrompt = `
 
 Strict rules:
 - Only return a valid JSON object with exactly these keys and correct types.
@@ -37,6 +74,9 @@ Strict rules:
     "commitment_score": 0,
     "feedback_message": "We couldn't read your planner page clearly. Please try again with a clearer photo."
   }`;
+
+  return basePrompt + adaptiveContext + closingPrompt;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -56,6 +96,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
@@ -84,7 +125,18 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log('Analyzing planner image for user:', user.id);
+    // Fetch user's learning profile for adaptive analysis
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const { data: learningProfile } = await adminClient
+      .from('user_learning_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    console.log('Analyzing planner image for user:', user.id, 'with learning profile:', !!learningProfile);
+
+    // Generate adaptive system prompt based on learning
+    const systemPrompt = generateSystemPrompt(learningProfile);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -151,6 +203,16 @@ serve(async (req) => {
         completion_rate: 0,
         commitment_score: 0,
         feedback_message: "We couldn't analyze your planner page. Please try again."
+      };
+    }
+
+    // Add learning system metadata to response
+    if (learningProfile) {
+      analysis._learning_adapted = true;
+      analysis._learning_signals = {
+        overplanning_detected: learningProfile.overplanning_detected,
+        optimistic_bias: learningProfile.optimistic_bias,
+        motivation_drop_pattern: learningProfile.motivation_drop_pattern,
       };
     }
 

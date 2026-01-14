@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.analyze-goals]
 verify_jwt = true
+
+[functions.analyze-behavior]
+verify_jwt = true

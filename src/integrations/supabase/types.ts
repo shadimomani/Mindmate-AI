@@ -360,6 +360,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_behavior_logs: {
+        Row: {
+          actual_follow_through: number | null
+          completed_tasks: number
+          completion_rate: number
+          created_at: string
+          id: string
+          mood_at_completion: string | null
+          mood_at_planning: string | null
+          planned_date: string
+          planned_tasks: number
+          predicted_commitment_score: number | null
+          prediction_accuracy: number | null
+          session_signals: Json | null
+          tasks_completed_times: Json | null
+          tasks_skipped_times: Json | null
+          user_id: string
+        }
+        Insert: {
+          actual_follow_through?: number | null
+          completed_tasks?: number
+          completion_rate?: number
+          created_at?: string
+          id?: string
+          mood_at_completion?: string | null
+          mood_at_planning?: string | null
+          planned_date: string
+          planned_tasks?: number
+          predicted_commitment_score?: number | null
+          prediction_accuracy?: number | null
+          session_signals?: Json | null
+          tasks_completed_times?: Json | null
+          tasks_skipped_times?: Json | null
+          user_id: string
+        }
+        Update: {
+          actual_follow_through?: number | null
+          completed_tasks?: number
+          completion_rate?: number
+          created_at?: string
+          id?: string
+          mood_at_completion?: string | null
+          mood_at_planning?: string | null
+          planned_date?: string
+          planned_tasks?: number
+          predicted_commitment_score?: number | null
+          prediction_accuracy?: number | null
+          session_signals?: Json | null
+          tasks_completed_times?: Json | null
+          tasks_skipped_times?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_goals: {
         Row: {
           ai_analysis: Json | null
@@ -394,6 +448,81 @@ export type Database = {
           id?: string
           main_goal?: string
           motivational_feedback?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_learning_profiles: {
+        Row: {
+          avg_commitment_accuracy: number | null
+          avg_completion_rate: number | null
+          consistent_time_failure: boolean
+          created_at: string
+          id: string
+          last_analysis_at: string | null
+          low_productivity_hours: Json | null
+          mood_performance_correlation: Json | null
+          motivation_drop_pattern: boolean
+          optimal_task_complexity: string | null
+          optimistic_bias: boolean
+          overplanning_detected: boolean
+          peak_productivity_hours: Json | null
+          preferred_task_volume: number | null
+          recommended_daily_tasks: number | null
+          recommended_structure: string | null
+          recommended_tone: string | null
+          task_complexity_too_high: boolean
+          total_interactions: number | null
+          undercommitment_detected: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_commitment_accuracy?: number | null
+          avg_completion_rate?: number | null
+          consistent_time_failure?: boolean
+          created_at?: string
+          id?: string
+          last_analysis_at?: string | null
+          low_productivity_hours?: Json | null
+          mood_performance_correlation?: Json | null
+          motivation_drop_pattern?: boolean
+          optimal_task_complexity?: string | null
+          optimistic_bias?: boolean
+          overplanning_detected?: boolean
+          peak_productivity_hours?: Json | null
+          preferred_task_volume?: number | null
+          recommended_daily_tasks?: number | null
+          recommended_structure?: string | null
+          recommended_tone?: string | null
+          task_complexity_too_high?: boolean
+          total_interactions?: number | null
+          undercommitment_detected?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_commitment_accuracy?: number | null
+          avg_completion_rate?: number | null
+          consistent_time_failure?: boolean
+          created_at?: string
+          id?: string
+          last_analysis_at?: string | null
+          low_productivity_hours?: Json | null
+          mood_performance_correlation?: Json | null
+          motivation_drop_pattern?: boolean
+          optimal_task_complexity?: string | null
+          optimistic_bias?: boolean
+          overplanning_detected?: boolean
+          peak_productivity_hours?: Json | null
+          preferred_task_volume?: number | null
+          recommended_daily_tasks?: number | null
+          recommended_structure?: string | null
+          recommended_tone?: string | null
+          task_complexity_too_high?: boolean
+          total_interactions?: number | null
+          undercommitment_detected?: boolean
           updated_at?: string
           user_id?: string
         }
