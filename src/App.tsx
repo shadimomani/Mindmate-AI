@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "next-themes";
+import { BehaviorTracker } from "@/components/BehaviorTracker";
 import Dashboard from "./pages/Dashboard";
 import DailyPlanner from "./pages/DailyPlanner";
 import Habits from "./pages/Habits";
@@ -28,6 +29,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <BehaviorTracker />
             <BrowserRouter>
               <Routes>
                 <Route path="/auth" element={<Auth />} />

@@ -1,6 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { MoodTracker } from "@/components/dashboard/MoodTracker";
+import { LearningInsights } from "@/components/dashboard/LearningInsights";
 import { BarChart3, TrendingUp, Calendar, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -198,6 +199,8 @@ const Insights = () => {
             trend="neutral"
           />
         </div>
+
+        <LearningInsights />
 
         <MoodTracker />
 
