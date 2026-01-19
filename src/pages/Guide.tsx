@@ -13,14 +13,18 @@ import {
   Sparkles,
   Target,
   Lightbulb,
-  Rocket
+  Rocket,
+  Play
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FeatureShowcase } from "@/components/guide/FeatureShowcase";
+import { Button } from "@/components/ui/button";
+import { InteractiveTour, useTour } from "@/components/InteractiveTour";
 
 const Guide = () => {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
+  const { isTourOpen, startTour, closeTour } = useTour();
 
   const features = [
     {
@@ -86,26 +90,46 @@ const Guide = () => {
 
   return (
     <DashboardLayout>
+      <InteractiveTour isOpen={isTourOpen} onClose={closeTour} />
+      
       <div className="space-y-6 sm:space-y-8">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between gap-3"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         >
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground mb-1 sm:mb-2">
-              {t('guideTitle')}
-            </h1>
+            <div className="flex items-center gap-3 mb-1 sm:mb-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground">
+                {t('guideTitle')}
+              </h1>
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              >
+                <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-accent shrink-0" />
+              </motion.div>
+            </div>
             <p className="text-sm sm:text-base text-muted-foreground">
               {t('guideSubtitle')}
             </p>
           </div>
+          
+          {/* Start Tour Button */}
           <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
           >
-            <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-accent shrink-0" />
+            <Button
+              onClick={startTour}
+              size="lg"
+              className="gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg hover:shadow-xl transition-all"
+            >
+              <Play className="h-5 w-5" />
+              {isRTL ? "ابدأ الجولة التفاعلية" : "Start Interactive Tour"}
+            </Button>
           </motion.div>
         </motion.div>
 

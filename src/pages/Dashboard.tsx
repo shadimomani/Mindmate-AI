@@ -7,6 +7,7 @@ import { HabitTracker } from "@/components/dashboard/HabitTracker";
 import { MoodTracker } from "@/components/dashboard/MoodTracker";
 import { ReflectionCard } from "@/components/dashboard/ReflectionCard";
 import { GuidePrompt } from "@/components/GuidePrompt";
+import { InteractiveTour, useTour } from "@/components/InteractiveTour";
 import { CheckCircle2, Flame, Target, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ const Dashboard = () => {
     habitsThisWeek: { completed: 0, total: 0 },
     productivity: 0,
   });
+  const { isTourOpen, startTour, closeTour } = useTour();
 
   useEffect(() => {
     if (!user) return;
@@ -90,7 +92,8 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <GuidePrompt />
+      <GuidePrompt onStartTour={startTour} />
+      <InteractiveTour isOpen={isTourOpen} onClose={closeTour} />
       <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500">
         <WelcomeBanner />
         <WelcomeCard displayName={displayName} />
