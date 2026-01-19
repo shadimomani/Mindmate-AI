@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, X, Sparkles } from "lucide-react";
+import { BookOpen, X, Sparkles, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 const GUIDE_PROMPT_KEY = "mindmate_guide_prompt_dismissed";
 
-export const GuidePrompt = () => {
+interface GuidePromptProps {
+  onStartTour?: () => void;
+}
+
+export const GuidePrompt = ({ onStartTour }: GuidePromptProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
-  const { t, isRTL } = useLanguage();
+  const { isRTL } = useLanguage();
 
   useEffect(() => {
     // Check if user has dismissed the prompt before
@@ -33,6 +37,14 @@ export const GuidePrompt = () => {
     localStorage.setItem(GUIDE_PROMPT_KEY, "true");
     setIsVisible(false);
     navigate("/guide");
+  };
+
+  const handleStartTour = () => {
+    localStorage.setItem(GUIDE_PROMPT_KEY, "true");
+    setIsVisible(false);
+    if (onStartTour) {
+      onStartTour();
+    }
   };
 
   return (
@@ -94,16 +106,24 @@ export const GuidePrompt = () => {
               <div className="p-6 space-y-4">
                 <p className="text-muted-foreground leading-relaxed">
                   {isRTL
-                    ? "نوصيك بزيارة صفحة الدليل للتعرف على جميع ميزات التطبيق وكيفية الاستفادة منها بشكل أفضل."
-                    : "We recommend visiting the Guide page to learn about all the app features and how to use them effectively."}
+                    ? "نوصيك بأخذ جولة تفاعلية للتعرف على جميع ميزات التطبيق، أو زيارة صفحة الدليل."
+                    : "We recommend taking an interactive tour to learn about all app features, or visiting the Guide page."}
                 </p>
 
                 <div className="flex flex-col gap-3 pt-2">
                   <Button
-                    onClick={handleGoToGuide}
-                    className="w-full gap-2 h-12 text-base font-medium"
+                    onClick={handleStartTour}
+                    className="w-full gap-2 h-12 text-base font-medium bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
                   >
-                    <BookOpen className="h-5 w-5" />
+                    <Play className="h-5 w-5" />
+                    {isRTL ? "ابدأ الجولة التفاعلية" : "Start Interactive Tour"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleGoToGuide}
+                    className="w-full gap-2 h-10"
+                  >
+                    <BookOpen className="h-4 w-4" />
                     {isRTL ? "افتح الدليل" : "Open Guide"}
                   </Button>
                   <Button
