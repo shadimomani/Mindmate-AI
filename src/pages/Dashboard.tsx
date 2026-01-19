@@ -6,6 +6,7 @@ import { TaskList } from "@/components/dashboard/TaskList";
 import { HabitTracker } from "@/components/dashboard/HabitTracker";
 import { MoodTracker } from "@/components/dashboard/MoodTracker";
 import { ReflectionCard } from "@/components/dashboard/ReflectionCard";
+import { GuidePrompt } from "@/components/GuidePrompt";
 import { CheckCircle2, Flame, Target, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,6 +90,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
+      <GuidePrompt />
       <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500">
         <WelcomeBanner />
         <WelcomeCard displayName={displayName} />
