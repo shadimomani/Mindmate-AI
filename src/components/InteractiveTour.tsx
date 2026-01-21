@@ -36,7 +36,7 @@ interface TourStep {
 const tourSteps: TourStep[] = [
   {
     id: "dashboard",
-    route: "/dashboard",
+    route: "/",
     titleEn: "Dashboard",
     titleAr: "لوحة التحكم",
     descriptionEn: "Your central hub! View your daily stats, track tasks, habits, and mood all in one place. Start each day here to see your progress.",
