@@ -1,11 +1,31 @@
-import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { ReactNode, useEffect, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [onboarded, setOnboarded] = useState<boolean | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    if (!user) {
+      setCheckingOnboarding(false);
+      return;
+    }
+    supabase
+      .from('profiles')
+      .select('onboarded')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        setOnboarded(data?.onboarded ?? false);
+        setCheckingOnboarding(false);
+      });
+  }, [user]);
+
+  if (loading || checkingOnboarding) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -18,6 +38,11 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Redirect to onboarding if not completed (unless already on onboarding)
+  if (!onboarded && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <>{children}</>;
