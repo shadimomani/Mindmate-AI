@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Briefcase, Heart, Sparkles, Plus, GripVertical, Circle, CheckCircle2, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { AddTaskModal } from "./AddTaskModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -184,7 +183,8 @@ export const SectionTaskBoard = () => {
   const [newTaskTimes, setNewTaskTimes] = useState<Record<TaskCategory, number>>({ work: 15, personal: 15, leisure: 15 });
   const [newTaskPriorities, setNewTaskPriorities] = useState<Record<TaskCategory, Priority>>({ work: "medium", personal: "medium", leisure: "medium" });
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [showAddForm, setShowAddForm] = useState<Record<TaskCategory, boolean>>({ work: false, personal: false, leisure: false });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalCategory, setModalCategory] = useState<TaskCategory>("work");
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -227,28 +227,27 @@ export const SectionTaskBoard = () => {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: !completed } : t)));
   };
 
-  const addTask = async (category: TaskCategory) => {
-    const title = newTaskInputs[category].trim();
-    if (!user || !title) return;
+  const addTask = async (taskData: { title: string; category: TaskCategory; estimated_time: number; priority: "high" | "medium" | "low"; repeat?: string | null }) => {
+    if (!user || !taskData.title) return;
 
-    const validation = taskSchema.safeParse({ title });
+    const validation = taskSchema.safeParse({ title: taskData.title });
     if (!validation.success) {
       toast({ title: "Validation Error", description: validation.error.errors[0].message, variant: "destructive" });
       return;
     }
 
-    const categoryTasks = tasks.filter((t) => t.category === category);
+    const categoryTasks = tasks.filter((t) => t.category === taskData.category);
     const sortOrder = categoryTasks.length;
 
     const { data, error } = await supabase
       .from("tasks")
       .insert({
         user_id: user.id,
-        title,
+        title: taskData.title,
         completed: false,
-        category,
-        priority: newTaskPriorities[category],
-        estimated_time: newTaskTimes[category],
+        category: taskData.category,
+        priority: taskData.priority,
+        estimated_time: taskData.estimated_time,
         sort_order: sortOrder,
       })
       .select()
@@ -259,9 +258,7 @@ export const SectionTaskBoard = () => {
       return;
     }
 
-    setTasks((prev) => [...prev, { ...data, category, priority: newTaskPriorities[category], estimated_time: newTaskTimes[category], sort_order: sortOrder }]);
-    setNewTaskInputs((prev) => ({ ...prev, [category]: "" }));
-    setShowAddForm((prev) => ({ ...prev, [category]: false }));
+    setTasks((prev) => [...prev, { ...data, category: taskData.category, priority: taskData.priority, estimated_time: taskData.estimated_time, sort_order: sortOrder }]);
   };
 
   // DnD handlers
@@ -365,69 +362,27 @@ export const SectionTaskBoard = () => {
                 </div>
               </SortableContext>
 
-              {/* Add Task */}
-              {showAddForm[section.id] ? (
-                <div className="mt-3 space-y-2 p-3 rounded-xl bg-card border border-border/60">
-                  <Input
-                    placeholder="Task title..."
-                    value={newTaskInputs[section.id]}
-                    onChange={(e) => setNewTaskInputs((p) => ({ ...p, [section.id]: e.target.value }))}
-                    onKeyDown={(e) => e.key === "Enter" && addTask(section.id)}
-                    maxLength={200}
-                    className="h-9 text-sm"
-                    autoFocus
-                  />
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <select
-                      value={newTaskTimes[section.id]}
-                      onChange={(e) => setNewTaskTimes((p) => ({ ...p, [section.id]: Number(e.target.value) }))}
-                      className="h-8 px-2 text-xs rounded-md border border-input bg-background"
-                    >
-                      {TIME_OPTIONS.map((m) => (
-                        <option key={m} value={m}>{m} min</option>
-                      ))}
-                    </select>
-                    <div className="flex gap-1">
-                      {(["high", "medium", "low"] as Priority[]).map((p) => (
-                        <button
-                          key={p}
-                          onClick={() => setNewTaskPriorities((prev) => ({ ...prev, [section.id]: p }))}
-                          className={cn(
-                            "px-2 py-0.5 text-[10px] rounded-md border font-medium capitalize transition-all touch-manipulation",
-                            newTaskPriorities[section.id] === p
-                              ? PRIORITY_COLORS[p!] + " ring-1 ring-offset-1 ring-accent/30"
-                              : "bg-muted/30 text-muted-foreground border-transparent"
-                          )}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 h-8 text-xs bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => addTask(section.id)} disabled={!newTaskInputs[section.id].trim()}>
-                      Add
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowAddForm((p) => ({ ...p, [section.id]: false }))}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowAddForm((p) => ({ ...p, [section.id]: true }))}
-                  className={cn("mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed text-xs font-medium transition-all hover:border-solid touch-manipulation", section.borderClass, section.accentClass, "opacity-60 hover:opacity-100")}
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Add task
-                </button>
-              )}
+              {/* Add Task Button */}
+              <button
+                onClick={() => { setModalCategory(section.id); setModalOpen(true); }}
+                className={cn("mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed text-xs font-medium transition-all hover:border-solid touch-manipulation", section.borderClass, section.accentClass, "opacity-60 hover:opacity-100")}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add task
+              </button>
             </motion.div>
           );
         })}
       </div>
 
       <DragOverlay>{activeTask && <TaskDragOverlay task={activeTask} />}</DragOverlay>
+
+      <AddTaskModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        defaultCategory={modalCategory}
+        onAdd={addTask}
+      />
     </DndContext>
   );
 };
