@@ -112,12 +112,12 @@ const Onboarding = () => {
       const allGoalLabels = goals.map((g) => g.label);
 
       // Save to user_goals
-      const { error: goalsError } = await supabase.from('user_goals').insert([{
+      const { error: goalsError } = await supabase.from('user_goals').upsert([{
         user_id: user.id,
         main_goal: mainGoals.length > 0 ? mainGoals.join(', ') : allGoalLabels[0],
         biggest_problem: 'Selected via structured onboarding',
         ai_analysis: { structured_goals: goals } as any,
-      }]);
+      }], { onConflict: 'user_id' });
 
       if (goalsError) throw goalsError;
 
