@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { User, Camera, RotateCcw } from "lucide-react";
+import { DataManagement } from "@/components/DataManagement";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -299,6 +300,11 @@ const Profile = () => {
           >
             {loading ? t('saving') : t('saveChanges')}
           </Button>
+        </div>
+
+        {/* Data Management Section */}
+        <div className="bg-card rounded-xl p-4 sm:p-6 shadow-soft border border-border">
+          <DataManagement />
         </div>
       </div>
     </DashboardLayout>
