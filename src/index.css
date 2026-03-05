@@ -43,6 +43,14 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
+    /* Section identity tokens */
+    --section-work: 217 72% 60%;
+    --section-work-soft: 217 72% 96%;
+    --section-personal: 152 60% 48%;
+    --section-personal-soft: 152 60% 96%;
+    --section-leisure: 38 80% 55%;
+    --section-leisure-soft: 38 80% 96%;
+
     /* Premium shadows */
     --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.1);
     --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.15);
@@ -92,6 +100,14 @@ All colors MUST be HSL.
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 43 74% 66%;
+
+    /* Section identity tokens (dark) */
+    --section-work: 217 72% 55%;
+    --section-work-soft: 217 40% 18%;
+    --section-personal: 152 50% 45%;
+    --section-personal-soft: 152 30% 18%;
+    --section-leisure: 38 70% 50%;
+    --section-leisure-soft: 38 40% 18%;
 
     /* Sidebar colors for dark mode */
     --sidebar-background: 0 0% 12%;
