@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Briefcase, Heart, Sparkles, Plus, GripVertical, Circle, CheckCircle2, Clock } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Briefcase, Heart, Sparkles, Plus, GripVertical, Circle, CheckCircle2, Clock, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AddTaskModal } from "./AddTaskModal";
@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { taskSchema } from "@/lib/validation";
 import { startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
+import { calculateAdaptiveLimits, type AdaptiveLimits } from "@/lib/commitmentAlgorithm";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DndContext,
   closestCenter,
@@ -185,6 +187,7 @@ export const SectionTaskBoard = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCategory, setModalCategory] = useState<TaskCategory>("work");
+  const [adaptiveLimits, setAdaptiveLimits] = useState<AdaptiveLimits | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -193,7 +196,10 @@ export const SectionTaskBoard = () => {
   );
 
   useEffect(() => {
-    if (user) loadTasks();
+    if (user) {
+      loadTasks();
+      calculateAdaptiveLimits(user.id).then(setAdaptiveLimits);
+    }
   }, [user]);
 
   const loadTasks = async () => {
@@ -220,6 +226,13 @@ export const SectionTaskBoard = () => {
         }))
       );
     }
+  };
+
+  // Check if section is at its adaptive limit
+  const isSectionAtLimit = (category: TaskCategory): boolean => {
+    if (!adaptiveLimits) return false;
+    const sectionCount = tasks.filter(t => t.category === category).length;
+    return sectionCount >= adaptiveLimits[category];
   };
 
   const toggleTask = async (id: string, completed: boolean) => {
@@ -310,6 +323,25 @@ export const SectionTaskBoard = () => {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Adaptive capacity indicator */}
+        {adaptiveLimits && (
+          <div className="lg:col-span-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50">
+                {adaptiveLimits.consistencyLevel === "high" && "🟢"}
+                {adaptiveLimits.consistencyLevel === "moderate" && "🟡"}
+                {adaptiveLimits.consistencyLevel === "low" && "🔵"}
+                Today's plan: up to {adaptiveLimits.total} tasks
+              </span>
+              {adaptiveLimits.completionRate > 0 && (
+                <span className="text-muted-foreground/60">
+                  Based on {adaptiveLimits.completionRate}% recent completion
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {SECTIONS.map((section) => {
           const sectionTasks = tasks
             .filter((t) => t.category === section.id)
@@ -318,6 +350,8 @@ export const SectionTaskBoard = () => {
           const total = sectionTasks.length;
           const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
           const Icon = section.icon;
+          const limit = adaptiveLimits?.[section.id] ?? 5;
+          const atLimit = isSectionAtLimit(section.id);
 
           return (
             <motion.div
@@ -331,7 +365,13 @@ export const SectionTaskBoard = () => {
                 <div className={cn("p-2 rounded-lg", section.iconBgClass)}>
                   <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", section.accentClass)} />
                 </div>
-                <h2 className="text-sm sm:text-base font-semibold text-foreground">{section.title}</h2>
+                <h2 className="text-sm sm:text-base font-semibold text-foreground flex-1">{section.title}</h2>
+                <span className={cn(
+                  "text-[10px] font-medium px-2 py-0.5 rounded-full",
+                  atLimit ? "bg-muted text-muted-foreground" : "bg-muted/40 text-muted-foreground/70"
+                )}>
+                  {total}/{limit}
+                </span>
               </div>
 
               {/* Progress */}
@@ -363,13 +403,27 @@ export const SectionTaskBoard = () => {
               </SortableContext>
 
               {/* Add Task Button */}
-              <button
-                onClick={() => { setModalCategory(section.id); setModalOpen(true); }}
-                className={cn("mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed text-xs font-medium transition-all hover:border-solid touch-manipulation", section.borderClass, section.accentClass, "opacity-60 hover:opacity-100")}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add task
-              </button>
+              {atLimit ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={cn("mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed text-xs font-medium opacity-30 cursor-default", section.borderClass, section.accentClass)}>
+                      <Info className="w-3.5 h-3.5" />
+                      Section balanced
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Your plan is optimized based on your recent pace. Complete existing tasks to add more.</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <button
+                  onClick={() => { setModalCategory(section.id); setModalOpen(true); }}
+                  className={cn("mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed text-xs font-medium transition-all hover:border-solid touch-manipulation", section.borderClass, section.accentClass, "opacity-60 hover:opacity-100")}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add task
+                </button>
+              )}
             </motion.div>
           );
         })}
