@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Briefcase, Heart, Sparkles, Plus, GripVertical, Circle, CheckCircle2, Clock, Info } from "lucide-react";
+import { Briefcase, Heart, Coffee, Plus, GripVertical, Circle, CheckCircle2, Clock, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AddTaskModal } from "./AddTaskModal";
