@@ -4,312 +4,233 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Briefcase, Heart, Sparkles, Check } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Briefcase, Heart, Coffee, Clock, Loader2, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-type Priority = 'high' | 'medium' | 'low';
-
-interface GoalSelection {
-  label: string;
-  priority: Priority;
+interface GeneratedTask {
+  title: string;
+  category: 'work' | 'personal' | 'leisure';
+  priority: 'high' | 'medium' | 'low';
+  estimated_time: number;
 }
 
-const GOAL_CATEGORIES = [
-  {
-    id: 'professional',
-    title: 'Work',
-    icon: Briefcase,
-    goals: [
-      'Improve focus',
-      'Complete pending tasks',
-      'Build consistency',
-      'Study effectively',
-      'Launch a project',
-    ],
-  },
-  {
-    id: 'personal',
-    title: 'Life',
-    icon: Heart,
-    goals: [
-      'Improve sleep',
-      'Exercise regularly',
-      'Reduce stress',
-      'Spend time with family',
-      'Build better habits',
-    ],
-  },
-  {
-    id: 'leisure',
-    title: 'Balance',
-    icon: Sparkles,
-    goals: [
-      'Read regularly',
-      'Learn a new skill',
-      'Practice a hobby',
-      'Digital detox',
-      'Relax intentionally',
-    ],
-  },
-] as const;
+type Step = 'questions' | 'generating' | 'plan';
 
-const PRIORITY_OPTIONS: { value: Priority; label: string; className: string }[] = [
-  { value: 'high', label: 'High', className: 'border-destructive/40 bg-destructive/5 text-destructive data-[active=true]:bg-destructive data-[active=true]:text-destructive-foreground' },
-  { value: 'medium', label: 'Medium', className: 'border-accent/40 bg-accent/5 text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground' },
-  { value: 'low', label: 'Low', className: 'border-muted-foreground/30 bg-muted/30 text-muted-foreground data-[active=true]:bg-muted-foreground data-[active=true]:text-primary-foreground' },
-];
+const CATEGORY_META: Record<string, { label: string; icon: typeof Briefcase; colorClass: string; bgClass: string }> = {
+  work: { label: 'Work', icon: Briefcase, colorClass: 'text-[hsl(var(--section-work))]', bgClass: 'bg-[hsl(var(--section-work)/0.1)]' },
+  personal: { label: 'Life', icon: Heart, colorClass: 'text-[hsl(var(--section-personal))]', bgClass: 'bg-[hsl(var(--section-personal)/0.1)]' },
+  leisure: { label: 'Balance', icon: Coffee, colorClass: 'text-[hsl(var(--section-leisure))]', bgClass: 'bg-[hsl(var(--section-leisure)/0.1)]' },
+};
 
 const Onboarding = () => {
-  const [selectedGoals, setSelectedGoals] = useState<Record<string, GoalSelection>>({});
-  const [customInputs, setCustomInputs] = useState<Record<string, string>>({});
+  const [biggestProblem, setBiggestProblem] = useState('');
+  const [mainGoal, setMainGoal] = useState('');
+  const [step, setStep] = useState<Step>('questions');
+  const [generatedTasks, setGeneratedTasks] = useState<GeneratedTask[]>([]);
+  const [motivationalMessage, setMotivationalMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const toggleGoal = (goal: string) => {
-    setSelectedGoals((prev) => {
-      const next = { ...prev };
-      if (next[goal]) {
-        delete next[goal];
-      } else {
-        next[goal] = { label: goal, priority: 'medium' };
-      }
-      return next;
-    });
-  };
+  const canSubmit = biggestProblem.trim().length >= 3 && mainGoal.trim().length >= 3;
 
-  const setPriority = (goal: string, priority: Priority) => {
-    setSelectedGoals((prev) => ({
-      ...prev,
-      [goal]: { ...prev[goal], priority },
-    }));
-  };
-
-  const addCustomGoal = (categoryId: string) => {
-    const value = customInputs[categoryId]?.trim();
-    if (!value || value.length > 80) return;
-    const key = `custom_${categoryId}_${value}`;
-    if (selectedGoals[key]) return;
-    setSelectedGoals((prev) => ({
-      ...prev,
-      [key]: { label: value, priority: 'medium' },
-    }));
-    setCustomInputs((prev) => ({ ...prev, [categoryId]: '' }));
-  };
-
-  const totalSelected = Object.keys(selectedGoals).length;
-
-  const handleSubmit = async () => {
-    if (!user || totalSelected === 0) return;
+  const handleGenerate = async () => {
+    if (!user || !canSubmit) return;
     setLoading(true);
+    setStep('generating');
 
     try {
-      const goals = Object.values(selectedGoals);
-      const mainGoals = goals.filter((g) => g.priority === 'high').map((g) => g.label);
-      const allGoalLabels = goals.map((g) => g.label);
+      const { data, error } = await supabase.functions.invoke('generate-plan', {
+        body: {
+          biggest_problem: biggestProblem.trim(),
+          main_goal: mainGoal.trim(),
+        },
+      });
 
-      // Save to user_goals
-      const { error: goalsError } = await supabase.from('user_goals').upsert([{
-        user_id: user.id,
-        main_goal: mainGoals.length > 0 ? mainGoals.join(', ') : allGoalLabels[0],
-        biggest_problem: 'Selected via structured onboarding',
-        ai_analysis: { structured_goals: goals } as any,
-      }], { onConflict: 'user_id' });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      if (goalsError) throw goalsError;
-
-      // Mark onboarded
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ onboarded: true, goals_completed: true })
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
-
-      toast({ title: 'Welcome to MindMate!', description: 'Your plan is being prepared.' });
-      navigate('/');
-    } catch (error) {
-      toast({ title: 'Error', description: 'Something went wrong. Please try again.', variant: 'destructive' });
+      setGeneratedTasks(data.tasks || []);
+      setMotivationalMessage(data.message || '');
+      setStep('plan');
+    } catch (error: any) {
+      toast({
+        title: 'Something went wrong',
+        description: error?.message || 'Please try again.',
+        variant: 'destructive',
+      });
+      setStep('questions');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/3 px-4 py-8 sm:py-12">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
+  const handleStart = () => {
+    navigate('/');
+  };
+
+  // Step 1: Two questions
+  if (step === 'questions') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/3 px-4 py-12 sm:py-20 flex items-start justify-center">
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 sm:mb-10"
+          className="w-full max-w-lg space-y-8"
         >
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-2">
-            What matters to you?
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
-            Select the goals you'd like to work on. We'll build your daily plan around them.
-          </p>
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
+              Let's understand you
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Two quick questions. We'll build your first plan from here.
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="space-y-2"
+            >
+              <label className="text-sm font-medium text-foreground">
+                What is your biggest problem right now?
+              </label>
+              <Textarea
+                value={biggestProblem}
+                onChange={(e) => setBiggestProblem(e.target.value)}
+                placeholder="I can't focus on my work and keep procrastinating..."
+                className="min-h-[80px] resize-none text-sm"
+                maxLength={300}
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-2"
+            >
+              <label className="text-sm font-medium text-foreground">
+                What is your main goal?
+              </label>
+              <Textarea
+                value={mainGoal}
+                onChange={(e) => setMainGoal(e.target.value)}
+                placeholder="I want to study consistently and pass my exams..."
+                className="min-h-[80px] resize-none text-sm"
+                maxLength={300}
+              />
+            </motion.div>
+          </div>
+
+          <Button
+            onClick={handleGenerate}
+            disabled={!canSubmit || loading}
+            className="w-full h-12 text-base font-medium bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-sm"
+          >
+            Build my plan
+          </Button>
         </motion.div>
+      </div>
+    );
+  }
 
-        {/* Goal Categories */}
-        <div className="space-y-6 sm:space-y-8">
-          {GOAL_CATEGORIES.map((category, catIdx) => {
-            const Icon = category.icon;
+  // Step 2: Generating animation
+  if (step === 'generating') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/3 flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-6"
+        >
+          <div className="relative mx-auto w-16 h-16">
+            <Loader2 className="w-16 h-16 text-accent animate-spin" />
+            <Sparkles className="w-6 h-6 text-accent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-serif font-semibold text-foreground">
+              Building your plan...
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+              Analyzing your goals and creating a realistic daily schedule
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Step 3: Show generated plan
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/3 px-4 py-12 sm:py-16 flex items-start justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-lg space-y-6"
+      >
+        <div className="text-center space-y-2">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', delay: 0.1 }}
+            className="mx-auto w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center"
+          >
+            <Sparkles className="w-6 h-6 text-accent" />
+          </motion.div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
+            Your first plan is ready
+          </h1>
+          {motivationalMessage && (
+            <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
+              {motivationalMessage}
+            </p>
+          )}
+        </div>
+
+        {/* Task cards */}
+        <div className="space-y-3">
+          {generatedTasks.map((task, i) => {
+            const meta = CATEGORY_META[task.category] || CATEGORY_META.work;
+            const Icon = meta.icon;
             return (
-              <motion.section
-                key={category.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: catIdx * 0.1 }}
-                className="rounded-xl border border-border bg-card/60 backdrop-blur-sm p-4 sm:p-6"
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15 + i * 0.1 }}
+                className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border/60"
               >
-                {/* Category Header */}
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+                <div className={cn('p-2 rounded-lg shrink-0', meta.bgClass)}>
+                  <Icon className={cn('w-4 h-4', meta.colorClass)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={cn('text-xs', meta.colorClass)}>{meta.label}</span>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="w-3 h-3" />
+                      {task.estimated_time}m
+                    </span>
                   </div>
-                  <h2 className="text-base sm:text-lg font-serif font-semibold text-foreground">
-                    {category.title}
-                  </h2>
                 </div>
-
-                {/* Goal Chips */}
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {category.goals.map((goal) => {
-                    const isSelected = !!selectedGoals[goal];
-                    return (
-                      <button
-                        key={goal}
-                        onClick={() => toggleGoal(goal)}
-                        className={cn(
-                          'px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border touch-manipulation',
-                          isSelected
-                            ? 'bg-accent text-accent-foreground border-accent shadow-sm scale-[1.02]'
-                            : 'bg-muted/40 text-muted-foreground border-transparent hover:bg-muted hover:text-foreground'
-                        )}
-                      >
-                        {isSelected && <Check className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
-                        {goal}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Priority for selected goals in this category */}
-                <AnimatePresence>
-                  {category.goals
-                    .filter((g) => selectedGoals[g])
-                    .map((goal) => (
-                      <motion.div
-                        key={`priority-${goal}`}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex items-center justify-between py-1.5 px-1">
-                          <span className="text-sm text-foreground truncate mr-3">{goal}</span>
-                          <div className="flex gap-1.5 shrink-0">
-                            {PRIORITY_OPTIONS.map((p) => (
-                              <button
-                                key={p.value}
-                                data-active={selectedGoals[goal]?.priority === p.value}
-                                onClick={() => setPriority(goal, p.value)}
-                                className={cn(
-                                  'px-2.5 py-0.5 text-xs rounded-md border font-medium transition-all touch-manipulation',
-                                  p.className
-                                )}
-                              >
-                                {p.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                </AnimatePresence>
-
-                {/* Custom goals in this category */}
-                {Object.entries(selectedGoals)
-                  .filter(([key]) => key.startsWith(`custom_${category.id}_`))
-                  .map(([key, goal]) => (
-                    <div key={key} className="flex items-center justify-between py-1.5 px-1">
-                      <span className="text-sm text-foreground truncate mr-3">{goal.label}</span>
-                      <div className="flex gap-1.5 shrink-0">
-                        {PRIORITY_OPTIONS.map((p) => (
-                          <button
-                            key={p.value}
-                            data-active={selectedGoals[key]?.priority === p.value}
-                            onClick={() => setPriority(key, p.value)}
-                            className={cn(
-                              'px-2.5 py-0.5 text-xs rounded-md border font-medium transition-all touch-manipulation',
-                              p.className
-                            )}
-                          >
-                            {p.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-
-                {/* Custom Input */}
-                <div className="mt-3 flex gap-2">
-                  <Input
-                    placeholder="Add a custom goal (optional)"
-                    value={customInputs[category.id] || ''}
-                    onChange={(e) =>
-                      setCustomInputs((prev) => ({ ...prev, [category.id]: e.target.value }))
-                    }
-                    maxLength={80}
-                    className="h-9 text-sm"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addCustomGoal(category.id);
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 shrink-0"
-                    onClick={() => addCustomGoal(category.id)}
-                    disabled={!customInputs[category.id]?.trim()}
-                  >
-                    Add
-                  </Button>
-                </div>
-              </motion.section>
+              </motion.div>
             );
           })}
         </div>
 
-        {/* Submit */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 sm:mt-10"
+        <Button
+          onClick={handleStart}
+          className="w-full h-12 text-base font-medium bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-sm"
         >
-          <Button
-            onClick={handleSubmit}
-            disabled={loading || totalSelected === 0}
-            className="w-full h-12 text-base font-medium bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-soft"
-          >
-            {loading ? 'Preparing your plan...' : `Generate My Daily Plan${totalSelected > 0 ? ` (${totalSelected} goals)` : ''}`}
-          </Button>
-          {totalSelected === 0 && (
-            <p className="text-center text-xs text-muted-foreground mt-2">
-              Select at least one goal to continue
-            </p>
-          )}
-        </motion.div>
-      </div>
+          Start my day
+        </Button>
+      </motion.div>
     </div>
   );
 };
