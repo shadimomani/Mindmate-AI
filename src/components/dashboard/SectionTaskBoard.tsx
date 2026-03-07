@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Briefcase, Heart, Sparkles, Plus, GripVertical, Circle, CheckCircle2, Clock, Info } from "lucide-react";
+import { Briefcase, Heart, Coffee, Plus, GripVertical, Circle, CheckCircle2, Clock, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AddTaskModal } from "./AddTaskModal";
@@ -57,33 +57,33 @@ const SECTIONS: {
 }[] = [
   {
     id: "work",
-    title: "Work / Professional",
+    title: "Work",
     icon: Briefcase,
-    bgClass: "bg-blue-50/60 dark:bg-blue-950/20",
-    borderClass: "border-blue-200/60 dark:border-blue-800/40",
-    accentClass: "text-blue-600 dark:text-blue-400",
-    progressClass: "[&>div]:bg-blue-500",
-    iconBgClass: "bg-blue-100 dark:bg-blue-900/40",
+    bgClass: "bg-[hsl(var(--section-work-soft))] dark:bg-[hsl(var(--section-work-soft))]",
+    borderClass: "border-[hsl(var(--section-work)/0.25)]",
+    accentClass: "text-[hsl(var(--section-work))]",
+    progressClass: "[&>div]:bg-[hsl(var(--section-work))]",
+    iconBgClass: "bg-[hsl(var(--section-work)/0.12)]",
   },
   {
     id: "personal",
-    title: "Personal Life",
+    title: "Life",
     icon: Heart,
-    bgClass: "bg-emerald-50/60 dark:bg-emerald-950/20",
-    borderClass: "border-emerald-200/60 dark:border-emerald-800/40",
-    accentClass: "text-emerald-600 dark:text-emerald-400",
-    progressClass: "[&>div]:bg-emerald-500",
-    iconBgClass: "bg-emerald-100 dark:bg-emerald-900/40",
+    bgClass: "bg-[hsl(var(--section-personal-soft))] dark:bg-[hsl(var(--section-personal-soft))]",
+    borderClass: "border-[hsl(var(--section-personal)/0.25)]",
+    accentClass: "text-[hsl(var(--section-personal))]",
+    progressClass: "[&>div]:bg-[hsl(var(--section-personal))]",
+    iconBgClass: "bg-[hsl(var(--section-personal)/0.12)]",
   },
   {
     id: "leisure",
-    title: "Leisure / Recovery",
-    icon: Sparkles,
-    bgClass: "bg-amber-50/60 dark:bg-amber-950/20",
-    borderClass: "border-amber-200/60 dark:border-amber-800/40",
-    accentClass: "text-amber-600 dark:text-amber-400",
-    progressClass: "[&>div]:bg-amber-500",
-    iconBgClass: "bg-amber-100 dark:bg-amber-900/40",
+    title: "Balance",
+    icon: Coffee,
+    bgClass: "bg-[hsl(var(--section-leisure-soft))] dark:bg-[hsl(var(--section-leisure-soft))]",
+    borderClass: "border-[hsl(var(--section-leisure)/0.25)]",
+    accentClass: "text-[hsl(var(--section-leisure))]",
+    progressClass: "[&>div]:bg-[hsl(var(--section-leisure))]",
+    iconBgClass: "bg-[hsl(var(--section-leisure)/0.12)]",
   },
 ];
 
@@ -323,24 +323,7 @@ export const SectionTaskBoard = () => {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Adaptive capacity indicator */}
-        {adaptiveLimits && (
-          <div className="lg:col-span-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50">
-                {adaptiveLimits.consistencyLevel === "high" && "🟢"}
-                {adaptiveLimits.consistencyLevel === "moderate" && "🟡"}
-                {adaptiveLimits.consistencyLevel === "low" && "🔵"}
-                Today's plan: up to {adaptiveLimits.total} tasks
-              </span>
-              {adaptiveLimits.completionRate > 0 && (
-                <span className="text-muted-foreground/60">
-                  Based on {adaptiveLimits.completionRate}% recent completion
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        {/* No visible algorithm details — the system manages the plan invisibly */}
 
         {SECTIONS.map((section) => {
           const sectionTasks = tasks
@@ -366,12 +349,6 @@ export const SectionTaskBoard = () => {
                   <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", section.accentClass)} />
                 </div>
                 <h2 className="text-sm sm:text-base font-semibold text-foreground flex-1">{section.title}</h2>
-                <span className={cn(
-                  "text-[10px] font-medium px-2 py-0.5 rounded-full",
-                  atLimit ? "bg-muted text-muted-foreground" : "bg-muted/40 text-muted-foreground/70"
-                )}>
-                  {total}/{limit}
-                </span>
               </div>
 
               {/* Progress */}
