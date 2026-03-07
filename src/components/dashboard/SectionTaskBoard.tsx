@@ -349,12 +349,6 @@ export const SectionTaskBoard = () => {
                   <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", section.accentClass)} />
                 </div>
                 <h2 className="text-sm sm:text-base font-semibold text-foreground flex-1">{section.title}</h2>
-                <span className={cn(
-                  "text-[10px] font-medium px-2 py-0.5 rounded-full",
-                  atLimit ? "bg-muted text-muted-foreground" : "bg-muted/40 text-muted-foreground/70"
-                )}>
-                  {total}/{limit}
-                </span>
               </div>
 
               {/* Progress */}
