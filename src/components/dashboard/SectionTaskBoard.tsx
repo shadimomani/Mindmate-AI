@@ -323,24 +323,7 @@ export const SectionTaskBoard = () => {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Adaptive capacity indicator */}
-        {adaptiveLimits && (
-          <div className="lg:col-span-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50">
-                {adaptiveLimits.consistencyLevel === "high" && "🟢"}
-                {adaptiveLimits.consistencyLevel === "moderate" && "🟡"}
-                {adaptiveLimits.consistencyLevel === "low" && "🔵"}
-                Today's plan: up to {adaptiveLimits.total} tasks
-              </span>
-              {adaptiveLimits.completionRate > 0 && (
-                <span className="text-muted-foreground/60">
-                  Based on {adaptiveLimits.completionRate}% recent completion
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        {/* No visible algorithm details — the system manages the plan invisibly */}
 
         {SECTIONS.map((section) => {
           const sectionTasks = tasks

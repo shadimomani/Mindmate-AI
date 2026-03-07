@@ -19,7 +19,7 @@ interface GoalSelection {
 const GOAL_CATEGORIES = [
   {
     id: 'professional',
-    title: 'Professional Goals',
+    title: 'Work',
     icon: Briefcase,
     goals: [
       'Improve focus',
@@ -31,7 +31,7 @@ const GOAL_CATEGORIES = [
   },
   {
     id: 'personal',
-    title: 'Personal Life Goals',
+    title: 'Life',
     icon: Heart,
     goals: [
       'Improve sleep',
@@ -43,7 +43,7 @@ const GOAL_CATEGORIES = [
   },
   {
     id: 'leisure',
-    title: 'Leisure & Free Time',
+    title: 'Balance',
     icon: Sparkles,
     goals: [
       'Read regularly',
