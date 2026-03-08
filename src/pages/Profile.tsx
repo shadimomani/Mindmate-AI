@@ -105,7 +105,13 @@ const Profile = () => {
             </div>
             <Switch
               checked={language === "ar"}
-              onCheckedChange={(checked) => setLanguage(checked ? "ar" : "en")}
+              onCheckedChange={async (checked) => {
+                const newLang = checked ? "ar" : "en";
+                setLanguage(newLang);
+                if (user) {
+                  await supabase.from("profiles").update({ language: newLang }).eq("id", user.id);
+                }
+              }}
             />
           </div>
 
