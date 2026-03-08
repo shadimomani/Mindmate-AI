@@ -77,12 +77,13 @@ You MUST use the generate_plan tool to return your response.`
                   analysis: {
                     type: "object",
                     properties: {
-                      problem_type: { type: "string", description: "e.g. procrastination, overload, lack of focus" },
+                      goal_type: { type: "string", description: "Detected life domain, e.g. Study, Fitness, Work" },
+                      problem_type: { type: "string", description: "Core difficulty, e.g. Procrastination, Overwhelm, Lack of focus" },
                       motivation_level: { type: "string", enum: ["high", "moderate", "low"] },
-                      commitment_estimate: { type: "number", description: "1-10 scale" },
+                      commitment_estimate: { type: "number", description: "1-10 scale based on language cues" },
                       recommended_daily_tasks: { type: "number", description: "3-5" }
                     },
-                    required: ["problem_type", "motivation_level", "commitment_estimate", "recommended_daily_tasks"]
+                    required: ["goal_type", "problem_type", "motivation_level", "commitment_estimate", "recommended_daily_tasks"]
                   },
                   tasks: {
                     type: "array",
