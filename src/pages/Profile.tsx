@@ -10,12 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "next-themes";
-
 const Profile = () => {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
