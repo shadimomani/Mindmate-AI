@@ -246,7 +246,7 @@ export const translations: Translations = {
   welcomeBackAuth: { en: "Welcome Back", ar: "مرحباً بعودتك" },
   createAccountToStart: { en: "Create your account to get started", ar: "أنشئ حسابك للبدء" },
   signInToContinueJourney: { en: "Sign in to continue your journey", ar: "سجل دخولك لمتابعة رحلتك" },
-  continueWithGoogle: { en: "Continue with Google", ar: "المتابعة مع جوجل" },
+  
   orContinueWithEmail: { en: "Or continue with email", ar: "أو المتابعة بالبريد الإلكتروني" },
   name: { en: "Name", ar: "الاسم" },
   yourNamePlaceholder: { en: "Your name", ar: "اسمك" },
