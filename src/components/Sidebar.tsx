@@ -35,7 +35,7 @@ export const AppSidebar = () => {
     if (error) {
       toast({
         title: t('error'),
-        description: 'Failed to sign out',
+        description: t('failedToSignOut'),
         variant: 'destructive',
       });
     } else {

@@ -1,6 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { subDays, format, startOfDay } from "date-fns";
 import { motion } from "framer-motion";
@@ -8,22 +9,15 @@ import { Check, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DayRecord {
-  label: string;       // "Mon", "Tue", …
-  dateStr: string;     // ISO date
+  label: string;
+  dateStr: string;
   completed: number;
   isToday: boolean;
 }
 
-function encouragement(totalCompleted: number, activeDays: number): string {
-  if (totalCompleted === 0) return "A new week. Start whenever you're ready.";
-  if (activeDays >= 6) return "Incredible consistency. You showed up almost every day.";
-  if (activeDays >= 4) return "Strong week. Your rhythm is building.";
-  if (activeDays >= 2) return "You showed up. That matters more than you think.";
-  return "Even one day counts. Keep going.";
-}
-
 const Insights = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [weekTasks, setWeekTasks] = useState<
     { completed: boolean; created_at: string }[]
   >([]);
@@ -70,24 +64,30 @@ const Insights = () => {
     return streak;
   })();
 
+  function encouragement(totalCompleted: number, activeDays: number): string {
+    if (totalCompleted === 0) return t('newWeekStart');
+    if (activeDays >= 6) return t('incredibleConsistency');
+    if (activeDays >= 4) return t('strongWeek');
+    if (activeDays >= 2) return t('youShowedUp');
+    return t('evenOneDayCounts');
+  }
+
   return (
     <DashboardLayout>
       <div className="max-w-xl mx-auto px-1 sm:px-0 space-y-8 sm:space-y-10 animate-in fade-in duration-500">
-        {/* ── Header ── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="pt-2"
         >
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
-            Your week
+            {t('yourWeek')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Consistency over perfection.
+            {t('consistencyOverPerfection')}
           </p>
         </motion.div>
 
-        {/* ── Streak pill ── */}
         {currentStreak > 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -95,11 +95,10 @@ const Insights = () => {
             transition={{ delay: 0.1 }}
             className="inline-flex items-center gap-2 bg-accent/10 text-accent rounded-full px-4 py-2 text-sm font-medium"
           >
-            🔥 {currentStreak} day streak
+            🔥 {currentStreak} {t('dayStreak')}
           </motion.div>
         )}
 
-        {/* ── Weekly grid ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -107,7 +106,7 @@ const Insights = () => {
           className="bg-card rounded-2xl border border-border p-5 sm:p-6 shadow-soft space-y-3"
         >
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-            This week
+            {t('thisWeek')}
           </p>
 
           {days.map((day, i) => (
@@ -121,7 +120,6 @@ const Insights = () => {
                 day.isToday && "bg-accent/5"
               )}
             >
-              {/* Day label */}
               <span
                 className={cn(
                   "w-10 text-sm font-medium shrink-0",
@@ -131,7 +129,6 @@ const Insights = () => {
                 {day.label}
               </span>
 
-              {/* Checkmarks or dash */}
               <div className="flex items-center gap-1.5 flex-1">
                 {day.completed > 0 ? (
                   Array.from({ length: Math.min(day.completed, 5) }, (_, j) => (
@@ -147,17 +144,15 @@ const Insights = () => {
                 )}
               </div>
 
-              {/* Today indicator */}
               {day.isToday && (
                 <span className="text-[10px] text-accent font-medium uppercase tracking-wider">
-                  Today
+                  {t('todayLabel')}
                 </span>
               )}
             </motion.div>
           ))}
         </motion.div>
 
-        {/* ── Supportive message ── */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -168,7 +163,7 @@ const Insights = () => {
             {encouragement(totalCompleted, activeDays)}
           </p>
           <p className="text-xs text-muted-foreground mt-1.5">
-            Small consistent actions create long-term change.
+            {t('smallActionsChange')}
           </p>
         </motion.div>
       </div>

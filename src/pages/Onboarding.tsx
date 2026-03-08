@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Briefcase, Heart, Coffee, Clock, Loader2, Sparkles } from 'lucide-react';
@@ -18,13 +19,15 @@ interface GeneratedTask {
 
 type Step = 'questions' | 'generating' | 'plan';
 
-const CATEGORY_META: Record<string, { label: string; icon: typeof Briefcase; colorClass: string; bgClass: string }> = {
-  work: { label: 'Work', icon: Briefcase, colorClass: 'text-[hsl(var(--section-work))]', bgClass: 'bg-[hsl(var(--section-work)/0.1)]' },
-  personal: { label: 'Life', icon: Heart, colorClass: 'text-[hsl(var(--section-personal))]', bgClass: 'bg-[hsl(var(--section-personal)/0.1)]' },
-  leisure: { label: 'Balance', icon: Coffee, colorClass: 'text-[hsl(var(--section-leisure))]', bgClass: 'bg-[hsl(var(--section-leisure)/0.1)]' },
-};
-
 const Onboarding = () => {
+  const { t } = useLanguage();
+
+  const CATEGORY_META: Record<string, { label: string; icon: typeof Briefcase; colorClass: string; bgClass: string }> = {
+    work: { label: t('work'), icon: Briefcase, colorClass: 'text-[hsl(var(--section-work))]', bgClass: 'bg-[hsl(var(--section-work)/0.1)]' },
+    personal: { label: t('life'), icon: Heart, colorClass: 'text-[hsl(var(--section-personal))]', bgClass: 'bg-[hsl(var(--section-personal)/0.1)]' },
+    leisure: { label: t('balance'), icon: Coffee, colorClass: 'text-[hsl(var(--section-leisure))]', bgClass: 'bg-[hsl(var(--section-leisure)/0.1)]' },
+  };
+
   const [biggestProblem, setBiggestProblem] = useState('');
   const [mainGoal, setMainGoal] = useState('');
   const [step, setStep] = useState<Step>('questions');
@@ -58,8 +61,8 @@ const Onboarding = () => {
       setStep('plan');
     } catch (error: any) {
       toast({
-        title: 'Something went wrong',
-        description: error?.message || 'Please try again.',
+        title: t('somethingWentWrong'),
+        description: error?.message || t('pleaseTryAgain'),
         variant: 'destructive',
       });
       setStep('questions');
@@ -72,7 +75,6 @@ const Onboarding = () => {
     navigate('/');
   };
 
-  // Step 1: Two questions
   if (step === 'questions') {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/3 px-4 py-12 sm:py-20 flex items-start justify-center">
@@ -83,10 +85,10 @@ const Onboarding = () => {
         >
           <div className="text-center space-y-2">
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
-              Let's understand you
+              {t('letsUnderstandYou')}
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base">
-              Two quick questions. We'll build your first plan from here.
+              {t('twoQuickQuestions')}
             </p>
           </div>
 
@@ -98,12 +100,12 @@ const Onboarding = () => {
               className="space-y-2"
             >
               <label className="text-sm font-medium text-foreground">
-                What is your biggest problem right now?
+                {t('biggestProblem')}
               </label>
               <Textarea
                 value={biggestProblem}
                 onChange={(e) => setBiggestProblem(e.target.value)}
-                placeholder="I can't focus on my work and keep procrastinating..."
+                placeholder={t('biggestProblemPlaceholder')}
                 className="min-h-[80px] resize-none text-sm"
                 maxLength={300}
               />
@@ -116,12 +118,12 @@ const Onboarding = () => {
               className="space-y-2"
             >
               <label className="text-sm font-medium text-foreground">
-                What is your main goal?
+                {t('mainGoalQuestion')}
               </label>
               <Textarea
                 value={mainGoal}
                 onChange={(e) => setMainGoal(e.target.value)}
-                placeholder="I want to study consistently and pass my exams..."
+                placeholder={t('mainGoalPlaceholder')}
                 className="min-h-[80px] resize-none text-sm"
                 maxLength={300}
               />
@@ -133,14 +135,13 @@ const Onboarding = () => {
             disabled={!canSubmit || loading}
             className="w-full h-12 text-base font-medium bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-sm"
           >
-            Build my plan
+            {t('buildMyPlan')}
           </Button>
         </motion.div>
       </div>
     );
   }
 
-  // Step 2: Generating animation
   if (step === 'generating') {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/3 flex items-center justify-center px-4">
@@ -155,10 +156,10 @@ const Onboarding = () => {
           </div>
           <div className="space-y-2">
             <h2 className="text-xl font-serif font-semibold text-foreground">
-              Building your plan...
+              {t('buildingYourPlan')}
             </h2>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-              Analyzing your goals and creating a realistic daily schedule
+              {t('analyzingGoals')}
             </p>
           </div>
         </motion.div>
@@ -166,7 +167,6 @@ const Onboarding = () => {
     );
   }
 
-  // Step 3: Show generated plan
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/3 px-4 py-12 sm:py-16 flex items-start justify-center">
       <motion.div
@@ -184,7 +184,7 @@ const Onboarding = () => {
             <Sparkles className="w-6 h-6 text-accent" />
           </motion.div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
-            Your first plan is ready
+            {t('planReady')}
           </h1>
           {motivationalMessage && (
             <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
@@ -193,7 +193,6 @@ const Onboarding = () => {
           )}
         </div>
 
-        {/* Task cards */}
         <div className="space-y-3">
           {generatedTasks.map((task, i) => {
             const meta = CATEGORY_META[task.category] || CATEGORY_META.work;
@@ -228,7 +227,7 @@ const Onboarding = () => {
           onClick={handleStart}
           className="w-full h-12 text-base font-medium bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-sm"
         >
-          Start my day
+          {t('startMyDay')}
         </Button>
       </motion.div>
     </div>
