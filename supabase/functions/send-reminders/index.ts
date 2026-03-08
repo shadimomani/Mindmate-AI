@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-      // Send via Resend
+      // Send via Resend (rate limit: 2/sec, so wait 600ms between sends)
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -136,7 +136,6 @@ Deno.serve(async (req) => {
 
       if (res.ok) {
         sentCount++;
-        // Update phrase index
         await supabase
           .from("profiles")
           .update({ last_reminder_phrase: nextIndex })
@@ -145,6 +144,9 @@ Deno.serve(async (req) => {
         const errBody = await res.text();
         console.error(`Failed to send to ${email}:`, errBody);
       }
+
+      // Respect Resend rate limit
+      await sleep(600);
     }
 
     return new Response(
