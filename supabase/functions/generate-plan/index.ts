@@ -127,10 +127,31 @@ You MUST use the generate_plan tool to return your response.`
     }
 
     const aiData = await aiResponse.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("AI did not return a plan");
 
-    const plan = JSON.parse(toolCall.function.arguments);
+    // Robust parsing: handle both tool-call and direct JSON responses
+    let plan: any;
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    if (toolCall) {
+      const args = toolCall.function.arguments;
+      plan = typeof args === "string" ? JSON.parse(args) : args;
+    } else {
+      // Fallback: try parsing from content directly
+      const content = aiData.choices?.[0]?.message?.content || "";
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        plan = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("AI did not return a valid plan");
+      }
+    }
+
+    // Validate minimum structure
+    if (!plan.tasks || !Array.isArray(plan.tasks) || plan.tasks.length === 0) {
+      throw new Error("AI returned an empty plan");
+    }
+    if (!plan.analysis) {
+      plan.analysis = { goal_type: "General", problem_type: "Unknown", motivation_level: "moderate", commitment_estimate: 5, recommended_daily_tasks: 3 };
+    }
 
     // Save goals
     await supabase.from("user_goals").upsert([{
