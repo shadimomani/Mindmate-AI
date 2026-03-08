@@ -207,24 +207,51 @@ const Dashboard = () => {
                   borderColor: `hsl(${section.color} / 0.2)`,
                 }}
               >
-                {/* Section header */}
-                <div className="flex items-center gap-2 mb-3">
-                  <div
-                    className="p-1.5 rounded-lg"
-                    style={{ backgroundColor: `hsl(${section.color} / 0.12)` }}
-                  >
-                    <Icon
-                      className="w-4 h-4"
-                      style={{ color: `hsl(${section.color})` }}
-                    />
-                  </div>
-                  <span
-                    className="text-xs font-semibold uppercase tracking-wider"
-                    style={{ color: `hsl(${section.color})` }}
-                  >
-                    {section.label}
-                  </span>
-                </div>
+                {/* Section header with progress */}
+                {(() => {
+                  const done = sectionTasks.filter((t) => t.completed).length;
+                  const total = sectionTasks.length;
+                  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                  return (
+                    <>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div
+                          className="p-1.5 rounded-lg"
+                          style={{ backgroundColor: `hsl(${section.color} / 0.12)` }}
+                        >
+                          <Icon
+                            className="w-4 h-4"
+                            style={{ color: `hsl(${section.color})` }}
+                          />
+                        </div>
+                        <span
+                          className="text-xs font-semibold uppercase tracking-wider flex-1"
+                          style={{ color: `hsl(${section.color})` }}
+                        >
+                          {section.label}
+                        </span>
+                        <span
+                          className="text-[11px] font-medium tabular-nums"
+                          style={{ color: `hsl(${section.color})` }}
+                        >
+                          {done}/{total}
+                        </span>
+                      </div>
+                      <div
+                        className="h-1.5 rounded-full mb-3 overflow-hidden"
+                        style={{ backgroundColor: `hsl(${section.color} / 0.12)` }}
+                      >
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: `hsl(${section.color})` }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.5, ease: "easeOut" }}
+                        />
+                      </div>
+                    </>
+                  );
+                })()}
 
                 {/* Tasks */}
                 <AnimatePresence>
