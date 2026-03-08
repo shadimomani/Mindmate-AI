@@ -35,14 +35,9 @@ const App = () => (
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/planner" element={<ProtectedRoute><DailyPlanner /></ProtectedRoute>} />
-                <Route path="/habits" element={<ProtectedRoute><Habits /></ProtectedRoute>} />
-                <Route path="/reflections" element={<ProtectedRoute><Reflections /></ProtectedRoute>} />
                 <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-                <Route path="/photos" element={<ProtectedRoute><Photos /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                <Route path="/guide" element={<ProtectedRoute><Guide /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
