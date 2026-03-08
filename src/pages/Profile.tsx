@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { User, Globe } from "lucide-react";
+import { User, Globe, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +19,7 @@ const Profile = () => {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
@@ -105,6 +107,23 @@ const Profile = () => {
               checked={language === "ar"}
               onCheckedChange={(checked) => setLanguage(checked ? "ar" : "en")}
             />
+          </div>
+
+          <div className="flex items-center justify-between py-2 border-t border-border pt-4">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium text-foreground">{t('restartOnboarding')}</p>
+                <p className="text-xs text-muted-foreground">{t('restartOnboardingDesc')}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/onboarding')}
+            >
+              {t('restart')}
+            </Button>
           </div>
 
           <Button

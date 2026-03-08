@@ -196,6 +196,9 @@ export const translations: Translations = {
   resetWelcomeBannerDescription: { en: "Show the welcome tips again on dashboard", ar: "إظهار نصائح الترحيب مرة أخرى في لوحة التحكم" },
   welcomeBannerReset: { en: "Welcome banner will appear on next dashboard visit", ar: "سيظهر شريط الترحيب في الزيارة القادمة للوحة التحكم" },
   reset: { en: "Reset", ar: "إعادة تعيين" },
+  restartOnboarding: { en: "Redo Onboarding", ar: "إعادة الإعداد" },
+  restartOnboardingDesc: { en: "Re-answer your goals and regenerate your plan", ar: "أعد الإجابة على أهدافك وأعد إنشاء خطتك" },
+  restart: { en: "Restart", ar: "إعادة" },
 
   // Guide Page
   guide: { en: "Guide", ar: "الدليل" },
