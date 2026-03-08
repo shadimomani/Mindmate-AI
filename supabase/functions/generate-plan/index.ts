@@ -54,9 +54,12 @@ STEP 2 — Generate the plan:
 • Total tasks: 3 (increase to 4-5 only if commitment is high).
 • Categories: "work" (professional/academic), "personal" (health, growth, relationships), "leisure" (rest, hobbies, recovery).
 • Always include at least one task from each category to maintain life balance.
-• Tasks must be small, specific, and completable in one session (15-60 min).
+• MICRO WINS RULE — Every task MUST be a small, concrete, measurable action completable in 5–20 minutes. Never use vague tasks.
+  - BAD: "Study mathematics", "Exercise for 1 hour", "Work on project"
+  - GOOD: "Read 3 pages of chapter 5", "Do 15 push-ups", "Write 1 paragraph of project intro", "Walk for 10 minutes", "Review 5 flashcards"
+• Each task title must include a specific number or concrete deliverable so the user knows exactly when it's done.
 • Priority: "high" for goal-aligned, "medium" for supporting, "low" for balance/rest.
-• If commitment is low, keep all tasks ≤ 30 minutes and prefer 3 total.
+• If commitment is low, keep all tasks ≤ 15 minutes and prefer 3 total.
 
 You MUST use the generate_plan tool to return your response.`
           },
@@ -90,10 +93,10 @@ You MUST use the generate_plan tool to return your response.`
                     items: {
                       type: "object",
                       properties: {
-                        title: { type: "string", description: "Short, actionable task title" },
+                        title: { type: "string", description: "Short, specific micro-win task with a concrete number or deliverable (e.g. 'Read 3 pages', 'Write 1 paragraph')" },
                         category: { type: "string", enum: ["work", "personal", "leisure"] },
                         priority: { type: "string", enum: ["high", "medium", "low"] },
-                        estimated_time: { type: "number", description: "Minutes (15-60)" }
+                        estimated_time: { type: "number", description: "Minutes (5-20)" }
                       },
                       required: ["title", "category", "priority", "estimated_time"]
                     },
