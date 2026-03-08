@@ -93,7 +93,7 @@ You MUST use the generate_plan tool to return your response.`
                     items: {
                       type: "object",
                       properties: {
-                        title: { type: "string", description: "Short, actionable task title" },
+                        title: { type: "string", description: "Short, specific micro-win task with a concrete number or deliverable (e.g. 'Read 3 pages', 'Write 1 paragraph')" },
                         category: { type: "string", enum: ["work", "personal", "leisure"] },
                         priority: { type: "string", enum: ["high", "medium", "low"] },
                         estimated_time: { type: "number", description: "Minutes (15-60)" }
