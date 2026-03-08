@@ -281,6 +281,8 @@ export type Database = {
           display_name: string | null
           goals_completed: boolean | null
           id: string
+          language: string | null
+          last_reminder_phrase: number | null
           onboarded: boolean
           updated_at: string
         }
@@ -291,6 +293,8 @@ export type Database = {
           display_name?: string | null
           goals_completed?: boolean | null
           id: string
+          language?: string | null
+          last_reminder_phrase?: number | null
           onboarded?: boolean
           updated_at?: string
         }
@@ -301,6 +305,8 @@ export type Database = {
           display_name?: string | null
           goals_completed?: boolean | null
           id?: string
+          language?: string | null
+          last_reminder_phrase?: number | null
           onboarded?: boolean
           updated_at?: string
         }
