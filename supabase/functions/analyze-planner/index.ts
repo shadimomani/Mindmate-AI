@@ -116,8 +116,29 @@ serve(async (req) => {
 
     const { image } = await req.json();
     
-    if (!image) {
-      throw new Error('No image provided');
+    if (!image || typeof image !== 'string') {
+      return new Response(JSON.stringify({ error: 'Image is required and must be a string' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate image format
+    const imageDataUrlPattern = /^data:image\/(jpeg|jpg|png|gif|webp);base64,/i;
+    if (!imageDataUrlPattern.test(image)) {
+      return new Response(JSON.stringify({ error: 'Invalid image format. Supported: JPEG, PNG, GIF, WebP' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Enforce max size (~5MB base64)
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024 * 1.33;
+    if (image.length > MAX_IMAGE_SIZE) {
+      return new Response(JSON.stringify({ error: 'Image exceeds maximum size of 5MB' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
