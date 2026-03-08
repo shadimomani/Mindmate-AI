@@ -26,12 +26,7 @@ export const AppSidebar = () => {
 
   const navigation = [
     { name: t('dashboard'), href: "/", icon: Home },
-    { name: t('dailyPlanner'), href: "/planner", icon: CheckSquare },
-    { name: t('habits'), href: "/habits", icon: Heart },
-    { name: t('reflections'), href: "/reflections", icon: MessageCircle },
     { name: t('insights'), href: "/insights", icon: BarChart3 },
-    { name: t('photos'), href: "/photos", icon: Image },
-    { name: t('guide'), href: "/guide", icon: BookOpen },
     { name: t('profile'), href: "/profile", icon: User },
   ];
 
