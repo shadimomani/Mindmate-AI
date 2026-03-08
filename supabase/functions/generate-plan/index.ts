@@ -96,7 +96,7 @@ You MUST use the generate_plan tool to return your response.`
                         title: { type: "string", description: "Short, specific micro-win task with a concrete number or deliverable (e.g. 'Read 3 pages', 'Write 1 paragraph')" },
                         category: { type: "string", enum: ["work", "personal", "leisure"] },
                         priority: { type: "string", enum: ["high", "medium", "low"] },
-                        estimated_time: { type: "number", description: "Minutes (15-60)" }
+                        estimated_time: { type: "number", description: "Minutes (5-20)" }
                       },
                       required: ["title", "category", "priority", "estimated_time"]
                     },
