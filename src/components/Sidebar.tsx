@@ -1,4 +1,4 @@
-import { Home, CheckSquare, Heart, MessageCircle, BarChart3, User, Brain, Image, LogOut, BookOpen } from "lucide-react";
+import { Home, BarChart3, User, LogOut } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,12 +26,7 @@ export const AppSidebar = () => {
 
   const navigation = [
     { name: t('dashboard'), href: "/", icon: Home },
-    { name: t('dailyPlanner'), href: "/planner", icon: CheckSquare },
-    { name: t('habits'), href: "/habits", icon: Heart },
-    { name: t('reflections'), href: "/reflections", icon: MessageCircle },
     { name: t('insights'), href: "/insights", icon: BarChart3 },
-    { name: t('photos'), href: "/photos", icon: Image },
-    { name: t('guide'), href: "/guide", icon: BookOpen },
     { name: t('profile'), href: "/profile", icon: User },
   ];
 
@@ -84,16 +79,7 @@ export const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-4 space-y-2">
-        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted">
-          <Brain className="w-5 h-5 text-accent shrink-0" />
-          {state === "expanded" && (
-            <div className="flex-1">
-              <p className="text-sm font-medium">{t('aiAssistant')}</p>
-              <p className="text-xs text-muted-foreground">{t('alwaysHereToHelp')}</p>
-            </div>
-          )}
-        </div>
+      <SidebarFooter className="border-t border-border p-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleLogout} tooltip={t('signOut')}>

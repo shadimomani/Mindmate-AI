@@ -9,13 +9,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "next-themes";
 import { BehaviorTracker } from "@/components/BehaviorTracker";
 import Dashboard from "./pages/Dashboard";
-import DailyPlanner from "./pages/DailyPlanner";
-import Habits from "./pages/Habits";
-import Reflections from "./pages/Reflections";
 import Insights from "./pages/Insights";
-import Photos from "./pages/Photos";
 import Profile from "./pages/Profile";
-import Guide from "./pages/Guide";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -35,14 +30,9 @@ const App = () => (
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/planner" element={<ProtectedRoute><DailyPlanner /></ProtectedRoute>} />
-                <Route path="/habits" element={<ProtectedRoute><Habits /></ProtectedRoute>} />
-                <Route path="/reflections" element={<ProtectedRoute><Reflections /></ProtectedRoute>} />
                 <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-                <Route path="/photos" element={<ProtectedRoute><Photos /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                <Route path="/guide" element={<ProtectedRoute><Guide /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
