@@ -53,8 +53,8 @@ const Profile = () => {
     <DashboardLayout>
       <div className="max-w-lg mx-auto space-y-8 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Profile</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Your account settings.</p>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">{t('profile')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('manageAccountSettings')}</p>
         </div>
 
         <div className="bg-card rounded-2xl border border-border p-5 sm:p-6 shadow-soft space-y-5">
