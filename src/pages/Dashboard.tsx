@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback } from "react";
 import { startOfDay } from "date-fns";
@@ -20,48 +21,26 @@ interface Task {
   created_at: string;
 }
 
-const SECTIONS = [
-  {
-    id: "work" as TaskCategory,
-    label: "Work",
-    icon: Briefcase,
-    color: "var(--section-work)",
-    soft: "var(--section-work-soft)",
-  },
-  {
-    id: "personal" as TaskCategory,
-    label: "Life",
-    icon: Heart,
-    color: "var(--section-personal)",
-    soft: "var(--section-personal-soft)",
-  },
-  {
-    id: "leisure" as TaskCategory,
-    label: "Balance",
-    icon: Coffee,
-    color: "var(--section-leisure)",
-    soft: "var(--section-leisure-soft)",
-  },
-] as const;
-
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-}
+const SECTION_KEYS: { id: TaskCategory; labelKey: string; icon: typeof Briefcase; color: string; soft: string }[] = [
+  { id: "work", labelKey: "work", icon: Briefcase, color: "var(--section-work)", soft: "var(--section-work-soft)" },
+  { id: "personal", labelKey: "life", icon: Heart, color: "var(--section-personal)", soft: "var(--section-personal-soft)" },
+  { id: "leisure", labelKey: "balance", icon: Coffee, color: "var(--section-leisure)", soft: "var(--section-leisure-soft)" },
+];
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [displayName, setDisplayName] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [limits, setLimits] = useState<AdaptiveLimits | null>(null);
+
+  const currentHour = new Date().getHours();
+  const greeting = currentHour < 12 ? t('goodMorning') : currentHour < 18 ? t('goodAfternoon') : t('goodEvening');
 
   useEffect(() => {
     if (!user) return;
 
     const load = async () => {
-      // Profile
       const { data: profile } = await supabase
         .from("profiles")
         .select("display_name")
@@ -69,10 +48,8 @@ const Dashboard = () => {
         .single();
       if (profile?.display_name) setDisplayName(profile.display_name);
 
-      // Adaptive limits
       calculateAdaptiveLimits(user.id).then(setLimits);
 
-      // Today's tasks (clean up old ones first)
       const todayStart = startOfDay(new Date()).toISOString();
       await supabase.from("tasks").delete().eq("user_id", user.id).lt("created_at", todayStart);
 
@@ -112,7 +89,6 @@ const Dashboard = () => {
     [tasks]
   );
 
-  // Commitment score: derived from adaptive limits completion rate (0–10 scale)
   const commitmentScore = limits
     ? Math.max(1, Math.min(10, Math.round(limits.completionRate / 10)))
     : null;
@@ -132,11 +108,11 @@ const Dashboard = () => {
           className="pt-2"
         >
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground">
-            {getGreeting()}
+            {greeting}
             {displayName ? `, ${displayName}` : ""}
           </h1>
           <p className="mt-1.5 text-sm sm:text-base text-muted-foreground">
-            Here's your plan for today.
+            {t('herePlanForToday')}
           </p>
         </motion.div>
 
@@ -157,13 +133,13 @@ const Dashboard = () => {
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Commitment Score</p>
+              <p className="text-sm font-semibold text-foreground">{t('commitmentScore')}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {commitmentScore >= 8
-                  ? "Great consistency — keep it up!"
+                  ? t('greatConsistency')
                   : commitmentScore >= 5
-                  ? "You're building momentum."
-                  : "Start small, stay consistent."}
+                  ? t('buildingMomentum')
+                  : t('startSmall')}
               </p>
             </div>
           </motion.div>
@@ -179,7 +155,7 @@ const Dashboard = () => {
           >
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>
-                {completedTasks} of {totalTasks} completed
+                {completedTasks} {t('ofCompleted')} {totalTasks} {t('completed')}
               </span>
               <span className="font-medium">{overallProgress}%</span>
             </div>
@@ -189,7 +165,7 @@ const Dashboard = () => {
 
         {/* ── Today's Plan ── */}
         <div className="space-y-4">
-          {SECTIONS.map((section, sectionIdx) => {
+          {SECTION_KEYS.map((section, sectionIdx) => {
             const sectionTasks = tasks.filter((t) => t.category === section.id);
             if (sectionTasks.length === 0) return null;
 
@@ -207,7 +183,6 @@ const Dashboard = () => {
                   borderColor: `hsl(${section.color} / 0.2)`,
                 }}
               >
-                {/* Section header with progress */}
                 {(() => {
                   const done = sectionTasks.filter((t) => t.completed).length;
                   const total = sectionTasks.length;
@@ -228,7 +203,7 @@ const Dashboard = () => {
                           className="text-xs font-semibold uppercase tracking-wider flex-1"
                           style={{ color: `hsl(${section.color})` }}
                         >
-                          {section.label}
+                          {t(section.labelKey)}
                         </span>
                         <span
                           className="text-[11px] font-medium tabular-nums"
@@ -253,7 +228,6 @@ const Dashboard = () => {
                   );
                 })()}
 
-                {/* Tasks */}
                 <AnimatePresence>
                   {sectionTasks.map((task) => (
                     <motion.button
@@ -309,8 +283,8 @@ const Dashboard = () => {
               transition={{ delay: 0.3 }}
               className="text-center py-16 text-muted-foreground"
             >
-              <p className="text-sm">No plan for today yet.</p>
-              <p className="text-xs mt-1">Your tasks will appear here once generated.</p>
+              <p className="text-sm">{t('noPlanYet')}</p>
+              <p className="text-xs mt-1">{t('tasksAppearHere')}</p>
             </motion.div>
           )}
         </div>
