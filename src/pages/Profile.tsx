@@ -109,6 +109,23 @@ const Profile = () => {
             />
           </div>
 
+          <div className="flex items-center justify-between py-2 border-t border-border pt-4">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium text-foreground">{t('restartOnboarding')}</p>
+                <p className="text-xs text-muted-foreground">{t('restartOnboardingDesc')}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/onboarding')}
+            >
+              {t('restart')}
+            </Button>
+          </div>
+
           <Button
             onClick={handleSave}
             disabled={loading}
