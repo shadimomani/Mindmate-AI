@@ -40,18 +40,23 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are Mindmate's plan generator. Analyze the user's problem and goal, then create their first daily plan.
+            content: `You are Mindmate's lightweight behavioral analysis engine. Your job is to read two short user answers and produce a realistic first daily plan.
 
-Rules:
-- Maximum 3-5 tasks total (prefer 3)
-- Each task must belong to one category: "work", "personal", or "leisure"
-- work = professional/academic tasks
-- personal = self-development, health, relationships
-- leisure = rest, hobbies, recovery
-- Always include at least one task from each category
-- Tasks should be small, specific, and achievable in one session
-- Estimate realistic durations (15-60 minutes)
-- Set priorities: the most aligned with user's goal = "high", supporting = "medium", balance = "low"
+STEP 1 — Infer behavioral signals from the text:
+• Goal type: identify the life domain (e.g. Study, Fitness, Work, Learning, Content Creation, Business, Personal Organization).
+• Problem type: classify the core difficulty (e.g. Procrastination, Lack of focus, Overwhelm, Inconsistency, Time management).
+• Commitment estimation: assess the user's language.
+  - Low commitment cues: "I struggle", "I keep delaying", "I can't stay consistent".
+  - Higher commitment cues: "I want to improve", "I want to achieve", "I'm ready to change".
+  Use these cues to set motivation_level (low/moderate/high) and commitment_estimate (1-10).
+
+STEP 2 — Generate the plan:
+• Total tasks: 3 (increase to 4-5 only if commitment is high).
+• Categories: "work" (professional/academic), "personal" (health, growth, relationships), "leisure" (rest, hobbies, recovery).
+• Always include at least one task from each category to maintain life balance.
+• Tasks must be small, specific, and completable in one session (15-60 min).
+• Priority: "high" for goal-aligned, "medium" for supporting, "low" for balance/rest.
+• If commitment is low, keep all tasks ≤ 30 minutes and prefer 3 total.
 
 You MUST use the generate_plan tool to return your response.`
           },
@@ -72,12 +77,13 @@ You MUST use the generate_plan tool to return your response.`
                   analysis: {
                     type: "object",
                     properties: {
-                      problem_type: { type: "string", description: "e.g. procrastination, overload, lack of focus" },
+                      goal_type: { type: "string", description: "Detected life domain, e.g. Study, Fitness, Work" },
+                      problem_type: { type: "string", description: "Core difficulty, e.g. Procrastination, Overwhelm, Lack of focus" },
                       motivation_level: { type: "string", enum: ["high", "moderate", "low"] },
-                      commitment_estimate: { type: "number", description: "1-10 scale" },
+                      commitment_estimate: { type: "number", description: "1-10 scale based on language cues" },
                       recommended_daily_tasks: { type: "number", description: "3-5" }
                     },
-                    required: ["problem_type", "motivation_level", "commitment_estimate", "recommended_daily_tasks"]
+                    required: ["goal_type", "problem_type", "motivation_level", "commitment_estimate", "recommended_daily_tasks"]
                   },
                   tasks: {
                     type: "array",
@@ -121,10 +127,31 @@ You MUST use the generate_plan tool to return your response.`
     }
 
     const aiData = await aiResponse.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("AI did not return a plan");
 
-    const plan = JSON.parse(toolCall.function.arguments);
+    // Robust parsing: handle both tool-call and direct JSON responses
+    let plan: any;
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    if (toolCall) {
+      const args = toolCall.function.arguments;
+      plan = typeof args === "string" ? JSON.parse(args) : args;
+    } else {
+      // Fallback: try parsing from content directly
+      const content = aiData.choices?.[0]?.message?.content || "";
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        plan = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("AI did not return a valid plan");
+      }
+    }
+
+    // Validate minimum structure
+    if (!plan.tasks || !Array.isArray(plan.tasks) || plan.tasks.length === 0) {
+      throw new Error("AI returned an empty plan");
+    }
+    if (!plan.analysis) {
+      plan.analysis = { goal_type: "General", problem_type: "Unknown", motivation_level: "moderate", commitment_estimate: 5, recommended_daily_tasks: 3 };
+    }
 
     // Save goals
     await supabase.from("user_goals").upsert([{
