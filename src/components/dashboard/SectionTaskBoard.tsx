@@ -228,11 +228,10 @@ export const SectionTaskBoard = () => {
     }
   };
 
-  // Check if section is at its adaptive limit
-  const isSectionAtLimit = (category: TaskCategory): boolean => {
-    if (!adaptiveLimits) return false;
-    const sectionCount = tasks.filter(t => t.category === category).length;
-    return sectionCount >= adaptiveLimits[category];
+  // Check if user has reached the total daily task limit
+  const isDailyLimitReached = (): boolean => {
+    if (!adaptiveLimits) return tasks.length >= 5;
+    return tasks.length >= adaptiveLimits.total;
   };
 
   const toggleTask = async (id: string, completed: boolean) => {
@@ -333,8 +332,7 @@ export const SectionTaskBoard = () => {
           const total = sectionTasks.length;
           const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
           const Icon = section.icon;
-          const limit = adaptiveLimits?.[section.id] ?? 5;
-          const atLimit = isSectionAtLimit(section.id);
+          const atLimit = isDailyLimitReached();
 
           return (
             <motion.div

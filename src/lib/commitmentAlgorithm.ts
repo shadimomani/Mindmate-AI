@@ -1,160 +1,124 @@
 import { supabase } from "@/integrations/supabase/client";
 
-type TaskCategory = "work" | "personal" | "leisure";
+/**
+ * Mindmate Commitment Adaptation Algorithm
+ *
+ * Dynamically adjusts daily task volume based on the user's
+ * recent completion rate. The system prioritises gradual adaptation,
+ * psychological safety and long-term consistency over raw productivity.
+ *
+ * Constraints
+ *   MAX  = 5 tasks / day
+ *   REC  = 3 tasks / day (starting point)
+ *   MIN  = 1 task  / day
+ *
+ * Adaptation rules (applied to yesterday's completion rate):
+ *   rate > 0.80  → +1 task (capped at MAX)
+ *   0.40 ≤ rate ≤ 0.80 → no change
+ *   rate < 0.40  → −1 task (floored at MIN)
+ */
+
+const MAX_TASKS = 5;
+const DEFAULT_TASKS = 3;
+const MIN_TASKS = 1;
 
 export interface AdaptiveLimits {
-  work: number;
-  personal: number;
-  leisure: number;
+  /** Total tasks allowed today */
   total: number;
+  /** Yesterday's completion rate (0-100) */
   completionRate: number;
+  /** Qualitative consistency level */
   consistencyLevel: "high" | "moderate" | "low";
 }
 
-/** Hard cap: Mindmate never shows more than 5 tasks per day */
-const ABSOLUTE_MAX = 5;
-/** Optimal daily target */
-const OPTIMAL_TOTAL = 3;
-
-const BASE_LIMITS: Record<TaskCategory, number> = {
-  work: 2,
-  personal: 1,
-  leisure: 1,
-};
-
-const MIN_LIMITS: Record<TaskCategory, number> = {
-  work: 1,
-  personal: 1,
-  leisure: 1,
-};
-
-const MAX_LIMITS: Record<TaskCategory, number> = {
-  work: 3,
-  personal: 2,
-  leisure: 1,
-};
-
 /**
- * Calculate adaptive task limits based on user's recent performance.
- * Philosophy: max 5 tasks/day, optimal 3. Adjustments are gradual (max ±1).
+ * Calculate today's adaptive task limit for a user.
+ *
+ * 1. Looks at the most recent full day with tasks.
+ * 2. Computes completion_rate = completed / assigned.
+ * 3. Adjusts from yesterday's assigned count by ±1 or 0.
+ * 4. Falls back to DEFAULT_TASKS for brand-new users.
  */
-export async function calculateAdaptiveLimits(userId: string): Promise<AdaptiveLimits> {
-  const baseTotal = BASE_LIMITS.work + BASE_LIMITS.personal + BASE_LIMITS.leisure;
+export async function calculateAdaptiveLimits(
+  userId: string
+): Promise<AdaptiveLimits> {
   const defaults: AdaptiveLimits = {
-    work: BASE_LIMITS.work,
-    personal: BASE_LIMITS.personal,
-    leisure: BASE_LIMITS.leisure,
-    total: Math.min(baseTotal, ABSOLUTE_MAX),
+    total: DEFAULT_TASKS,
     completionRate: 0,
     consistencyLevel: "moderate",
   };
 
   try {
-    const weekAgo = new Date();
+    // Fetch the last 7 days of tasks (excluding today) to find the most
+    // recent day with activity.
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const weekAgo = new Date(todayStart);
     weekAgo.setDate(weekAgo.getDate() - 7);
 
     const { data: recentTasks } = await supabase
       .from("tasks")
-      .select("completed, category, estimated_time, created_at")
+      .select("completed, created_at")
       .eq("user_id", userId)
-      .gte("created_at", weekAgo.toISOString());
+      .gte("created_at", weekAgo.toISOString())
+      .lt("created_at", todayStart.toISOString())
+      .order("created_at", { ascending: false });
 
-    if (!recentTasks || recentTasks.length < 3) {
+    if (!recentTasks || recentTasks.length === 0) {
       return defaults;
     }
 
-    const sectionStats: Record<TaskCategory, { completed: number; total: number; totalTime: number }> = {
-      work: { completed: 0, total: 0, totalTime: 0 },
-      personal: { completed: 0, total: 0, totalTime: 0 },
-      leisure: { completed: 0, total: 0, totalTime: 0 },
-    };
-
-    for (const task of recentTasks) {
-      const cat = (task.category || "work") as TaskCategory;
-      if (sectionStats[cat]) {
-        sectionStats[cat].total++;
-        sectionStats[cat].totalTime += task.estimated_time || 15;
-        if (task.completed) sectionStats[cat].completed++;
-      }
+    // Group tasks by date and pick the most recent day
+    const byDate: Record<string, { assigned: number; completed: number }> = {};
+    for (const t of recentTasks) {
+      const day = new Date(t.created_at).toDateString();
+      if (!byDate[day]) byDate[day] = { assigned: 0, completed: 0 };
+      byDate[day].assigned++;
+      if (t.completed) byDate[day].completed++;
     }
 
-    const totalCompleted = recentTasks.filter(t => t.completed).length;
-    const overallRate = totalCompleted / recentTasks.length;
+    // Most recent day first
+    const sortedDays = Object.entries(byDate).sort(
+      (a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime()
+    );
 
-    let consistencyLevel: "high" | "moderate" | "low";
-    if (overallRate >= 0.8) consistencyLevel = "high";
-    else if (overallRate >= 0.5) consistencyLevel = "moderate";
+    const [, lastDay] = sortedDays[0];
+    const completionRate =
+      lastDay.assigned > 0 ? lastDay.completed / lastDay.assigned : 0;
+
+    // Determine consistency level from the full week
+    const allRates = sortedDays.map(
+      ([, d]) => (d.assigned > 0 ? d.completed / d.assigned : 0)
+    );
+    const avgRate =
+      allRates.reduce((s, r) => s + r, 0) / allRates.length;
+
+    let consistencyLevel: AdaptiveLimits["consistencyLevel"];
+    if (avgRate >= 0.8) consistencyLevel = "high";
+    else if (avgRate >= 0.4) consistencyLevel = "moderate";
     else consistencyLevel = "low";
 
-    const limits: Record<TaskCategory, number> = { ...BASE_LIMITS };
+    // Adaptation: start from yesterday's assigned count
+    let nextTotal = lastDay.assigned;
 
-    for (const cat of ["work", "personal", "leisure"] as TaskCategory[]) {
-      const stats = sectionStats[cat];
-      if (stats.total < 2) continue;
-
-      const sectionRate = stats.completed / stats.total;
-
-      if (sectionRate >= 0.85 && consistencyLevel === "high") {
-        limits[cat] = Math.min(BASE_LIMITS[cat] + 1, MAX_LIMITS[cat]);
-      } else if (sectionRate < 0.4 || consistencyLevel === "low") {
-        limits[cat] = Math.max(BASE_LIMITS[cat] - 1, MIN_LIMITS[cat]);
-      }
+    if (completionRate > 0.8) {
+      nextTotal = Math.min(nextTotal + 1, MAX_TASKS);
+    } else if (completionRate < 0.4) {
+      nextTotal = Math.max(nextTotal - 1, MIN_TASKS);
     }
+    // 0.40–0.80 → keep the same
 
-    // Enforce absolute max of 5 tasks total
-    let rawTotal = limits.work + limits.personal + limits.leisure;
-    while (rawTotal > ABSOLUTE_MAX) {
-      // Trim from the section with the highest limit
-      const highest = (Object.entries(limits) as [TaskCategory, number][])
-        .sort((a, b) => b[1] - a[1])[0][0];
-      limits[highest] = Math.max(limits[highest] - 1, MIN_LIMITS[highest]);
-      rawTotal = limits.work + limits.personal + limits.leisure;
-    }
-
-    // Time-aware: if average daily time exceeds ~2 hours, reduce
-    const daysActive = new Set(
-      recentTasks.map(t => new Date(t.created_at).toDateString())
-    ).size || 1;
-    const avgDailyMinutes = recentTasks.reduce((sum, t) => sum + (t.estimated_time || 15), 0) / daysActive;
-
-    if (avgDailyMinutes > 120) {
-      const highest = (Object.entries(limits) as [TaskCategory, number][])
-        .sort((a, b) => b[1] - a[1])[0][0];
-      limits[highest] = Math.max(limits[highest] - 1, MIN_LIMITS[highest]);
-    }
-
-    const total = Math.min(limits.work + limits.personal + limits.leisure, ABSOLUTE_MAX);
+    // Safety clamp
+    nextTotal = Math.max(MIN_TASKS, Math.min(MAX_TASKS, nextTotal));
 
     return {
-      ...limits,
-      total,
-      completionRate: Math.round(overallRate * 100),
+      total: nextTotal,
+      completionRate: Math.round(completionRate * 100),
       consistencyLevel,
     };
   } catch (error) {
     console.error("[Commitment Algorithm] Error:", error);
     return defaults;
   }
-}
-
-/**
- * Smart task selection: pick the most relevant tasks for today from a larger pool.
- */
-export function selectSmartTasks<T extends { priority: string | null; created_at: string; estimated_time: number }>(
-  tasks: T[],
-  limit: number
-): T[] {
-  if (tasks.length <= limit) return tasks;
-
-  const priorityWeight: Record<string, number> = { high: 3, medium: 2, low: 1 };
-
-  const scored = tasks.map(t => ({
-    task: t,
-    score:
-      (priorityWeight[t.priority || "medium"] || 2) * 10 +
-      Math.min(5, Math.floor((Date.now() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24))),
-  }));
-
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, limit).map(s => s.task);
 }
