@@ -1,142 +1,291 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { WelcomeCard } from "@/components/dashboard/WelcomeCard";
-import { WelcomeBanner } from "@/components/dashboard/WelcomeBanner";
-import { StatsCard } from "@/components/dashboard/StatsCard";
-import { TaskList } from "@/components/dashboard/TaskList";
-import { HabitTracker } from "@/components/dashboard/HabitTracker";
-import { MoodTracker } from "@/components/dashboard/MoodTracker";
-import { ReflectionCard } from "@/components/dashboard/ReflectionCard";
-import { GuidePrompt } from "@/components/GuidePrompt";
-import { InteractiveTour, useTour } from "@/components/InteractiveTour";
-import { CheckCircle2, Flame, Target, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { startOfDay } from "date-fns";
+import { calculateAdaptiveLimits, type AdaptiveLimits } from "@/lib/commitmentAlgorithm";
+import { Briefcase, Heart, Coffee, CheckCircle2, Circle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { Progress } from "@/components/ui/progress";
+
+type TaskCategory = "work" | "personal" | "leisure";
+
+interface Task {
+  id: string;
+  title: string;
+  completed: boolean;
+  category: TaskCategory;
+  estimated_time: number;
+  created_at: string;
+}
+
+const SECTIONS = [
+  {
+    id: "work" as TaskCategory,
+    label: "Work",
+    icon: Briefcase,
+    color: "var(--section-work)",
+    soft: "var(--section-work-soft)",
+  },
+  {
+    id: "personal" as TaskCategory,
+    label: "Life",
+    icon: Heart,
+    color: "var(--section-personal)",
+    soft: "var(--section-personal-soft)",
+  },
+  {
+    id: "leisure" as TaskCategory,
+    label: "Balance",
+    icon: Coffee,
+    color: "var(--section-leisure)",
+    soft: "var(--section-leisure-soft)",
+  },
+] as const;
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [displayName, setDisplayName] = useState<string>("");
-  const [stats, setStats] = useState({
-    tasksCompletedToday: 0,
-    currentStreak: 0,
-    habitsThisWeek: { completed: 0, total: 0 },
-    productivity: 0,
-  });
-  const { isTourOpen, startTour, closeTour } = useTour();
+  const [displayName, setDisplayName] = useState("");
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [limits, setLimits] = useState<AdaptiveLimits | null>(null);
 
   useEffect(() => {
     if (!user) return;
 
-    const fetchStats = async () => {
-      // Fetch user profile
+    const load = async () => {
+      // Profile
       const { data: profile } = await supabase
         .from("profiles")
         .select("display_name")
         .eq("id", user.id)
         .single();
+      if (profile?.display_name) setDisplayName(profile.display_name);
 
-      if (profile?.display_name) {
-        setDisplayName(profile.display_name);
+      // Adaptive limits
+      calculateAdaptiveLimits(user.id).then(setLimits);
+
+      // Today's tasks (clean up old ones first)
+      const todayStart = startOfDay(new Date()).toISOString();
+      await supabase.from("tasks").delete().eq("user_id", user.id).lt("created_at", todayStart);
+
+      const { data } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("created_at", todayStart)
+        .order("sort_order", { ascending: true });
+
+      if (data) {
+        setTasks(
+          data.map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            completed: t.completed,
+            category: (t.category || "work") as TaskCategory,
+            estimated_time: t.estimated_time || 15,
+            created_at: t.created_at,
+          }))
+        );
       }
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Tasks completed today
-      const { data: tasks } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("completed", true)
-        .gte("updated_at", today.toISOString());
-
-      // Current streak from habits
-      const { data: habits } = await supabase
-        .from("habits")
-        .select("streak")
-        .eq("user_id", user.id)
-        .order("streak", { ascending: false })
-        .limit(1);
-
-      // Habits this week
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const { data: allHabits } = await supabase
-        .from("habits")
-        .select("*")
-        .eq("user_id", user.id);
-
-      const completedThisWeek = allHabits?.filter(h => h.completed_today).length || 0;
-      const totalHabits = allHabits?.length || 0;
-
-      // Calculate productivity
-      const { data: allTasks } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("created_at", weekAgo.toISOString());
-
-      const completedTasks = allTasks?.filter(t => t.completed).length || 0;
-      const totalTasks = allTasks?.length || 1;
-      const productivity = Math.round((completedTasks / totalTasks) * 100);
-
-      setStats({
-        tasksCompletedToday: tasks?.length || 0,
-        currentStreak: habits?.[0]?.streak || 0,
-        habitsThisWeek: { completed: completedThisWeek, total: totalHabits },
-        productivity,
-      });
     };
 
-    fetchStats();
+    load();
   }, [user]);
+
+  const toggleTask = useCallback(
+    async (id: string) => {
+      const task = tasks.find((t) => t.id === id);
+      if (!task) return;
+      await supabase.from("tasks").update({ completed: !task.completed }).eq("id", id);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+      );
+    },
+    [tasks]
+  );
+
+  // Commitment score: derived from adaptive limits completion rate (0–10 scale)
+  const commitmentScore = limits
+    ? Math.max(1, Math.min(10, Math.round(limits.completionRate / 10)))
+    : null;
+
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter((t) => t.completed).length;
+  const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
     <DashboardLayout>
-      <GuidePrompt onStartTour={startTour} />
-      <InteractiveTour isOpen={isTourOpen} onClose={closeTour} />
-      <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500">
-        <WelcomeBanner />
-        <WelcomeCard displayName={displayName} />
+      <div className="max-w-2xl mx-auto px-1 sm:px-0 space-y-8 sm:space-y-10 animate-in fade-in duration-500">
+        {/* ── Greeting ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="pt-2"
+        >
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground">
+            {getGreeting()}
+            {displayName ? `, ${displayName}` : ""}
+          </h1>
+          <p className="mt-1.5 text-sm sm:text-base text-muted-foreground">
+            Here's your plan for today.
+          </p>
+        </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-          <StatsCard
-            title="Tasks Completed"
-            value={stats.tasksCompletedToday}
-            subtitle="Today"
-            icon={CheckCircle2}
-            trend="up"
-          />
-          <StatsCard
-            title="Current Streak"
-            value={stats.currentStreak}
-            subtitle="Days"
-            icon={Flame}
-            trend={stats.currentStreak > 0 ? "up" : "neutral"}
-          />
-          <StatsCard
-            title="Goals This Week"
-            value={`${stats.habitsThisWeek.completed}/${stats.habitsThisWeek.total}`}
-            subtitle="On track"
-            icon={Target}
-            trend="neutral"
-          />
-          <StatsCard
-            title="Productivity"
-            value={`${stats.productivity}%`}
-            subtitle="This week"
-            icon={TrendingUp}
-            trend={stats.productivity >= 70 ? "up" : "neutral"}
-          />
-        </div>
+        {/* ── Commitment Score ── */}
+        {commitmentScore !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.45 }}
+            className="flex items-center gap-4 bg-card rounded-2xl border border-border p-5 shadow-soft"
+          >
+            <div className="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-accent/10">
+              <span className="text-2xl font-serif font-bold text-accent">
+                {commitmentScore}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium tracking-wide">
+                / 10
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Commitment Score</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {commitmentScore >= 8
+                  ? "Great consistency — keep it up!"
+                  : commitmentScore >= 5
+                  ? "You're building momentum."
+                  : "Start small, stay consistent."}
+              </p>
+            </div>
+          </motion.div>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-          <TaskList />
-          <HabitTracker />
-        </div>
+        {/* ── Overall Progress ── */}
+        {totalTasks > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
+            className="space-y-2"
+          >
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {completedTasks} of {totalTasks} completed
+              </span>
+              <span className="font-medium">{overallProgress}%</span>
+            </div>
+            <Progress value={overallProgress} className="h-1.5" />
+          </motion.div>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-          <MoodTracker />
-          <ReflectionCard />
+        {/* ── Today's Plan ── */}
+        <div className="space-y-4">
+          {SECTIONS.map((section, sectionIdx) => {
+            const sectionTasks = tasks.filter((t) => t.category === section.id);
+            if (sectionTasks.length === 0) return null;
+
+            const Icon = section.icon;
+
+            return (
+              <motion.div
+                key={section.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + sectionIdx * 0.1 }}
+                className="rounded-2xl border p-4 sm:p-5"
+                style={{
+                  backgroundColor: `hsl(${section.soft})`,
+                  borderColor: `hsl(${section.color} / 0.2)`,
+                }}
+              >
+                {/* Section header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div
+                    className="p-1.5 rounded-lg"
+                    style={{ backgroundColor: `hsl(${section.color} / 0.12)` }}
+                  >
+                    <Icon
+                      className="w-4 h-4"
+                      style={{ color: `hsl(${section.color})` }}
+                    />
+                  </div>
+                  <span
+                    className="text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: `hsl(${section.color})` }}
+                  >
+                    {section.label}
+                  </span>
+                </div>
+
+                {/* Tasks */}
+                <AnimatePresence>
+                  {sectionTasks.map((task) => (
+                    <motion.button
+                      key={task.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.97 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      onClick={() => toggleTask(task.id)}
+                      className={cn(
+                        "w-full flex items-center gap-3 p-3 rounded-xl transition-all mb-2 last:mb-0 text-left touch-manipulation",
+                        task.completed
+                          ? "bg-background/40"
+                          : "bg-background/70 hover:bg-background/90"
+                      )}
+                    >
+                      {task.completed ? (
+                        <CheckCircle2
+                          className="w-5 h-5 shrink-0"
+                          style={{ color: `hsl(${section.color})` }}
+                        />
+                      ) : (
+                        <Circle className="w-5 h-5 text-muted-foreground/50 shrink-0" />
+                      )}
+
+                      <span
+                        className={cn(
+                          "flex-1 text-sm sm:text-base",
+                          task.completed
+                            ? "line-through text-muted-foreground"
+                            : "text-foreground"
+                        )}
+                      >
+                        {task.title}
+                      </span>
+
+                      {task.estimated_time > 0 && (
+                        <span className="text-[11px] text-muted-foreground/60 tabular-nums shrink-0">
+                          {task.estimated_time}m
+                        </span>
+                      )}
+                    </motion.button>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
+
+          {totalTasks === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-center py-16 text-muted-foreground"
+            >
+              <p className="text-sm">No plan for today yet.</p>
+              <p className="text-xs mt-1">Your tasks will appear here once generated.</p>
+            </motion.div>
+          )}
         </div>
       </div>
     </DashboardLayout>
