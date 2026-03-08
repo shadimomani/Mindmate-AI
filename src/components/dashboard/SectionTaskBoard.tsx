@@ -332,8 +332,7 @@ export const SectionTaskBoard = () => {
           const total = sectionTasks.length;
           const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
           const Icon = section.icon;
-          const limit = adaptiveLimits?.[section.id] ?? 5;
-          const atLimit = isSectionAtLimit(section.id);
+          const atLimit = isDailyLimitReached();
 
           return (
             <motion.div
