@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { User } from "lucide-react";
+import { User, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Profile = () => {
   const [displayName, setDisplayName] = useState("");
@@ -16,6 +17,7 @@ const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     if (!user) return;
@@ -51,24 +53,24 @@ const Profile = () => {
     <DashboardLayout>
       <div className="max-w-lg mx-auto space-y-8 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Profile</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Your account settings.</p>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">{t('profile')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('manageAccountSettings')}</p>
         </div>
 
         <div className="bg-card rounded-2xl border border-border p-5 sm:p-6 shadow-soft space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="name">Display Name</Label>
+            <Label htmlFor="name">{t('displayName')}</Label>
             <Input
               id="name"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your name"
+              placeholder={t('yourName')}
               maxLength={100}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('email')}</Label>
             <Input
               id="email"
               type="email"
@@ -80,12 +82,28 @@ const Profile = () => {
 
           <div className="flex items-center justify-between py-2">
             <div>
-              <p className="text-sm font-medium text-foreground">Dark Mode</p>
-              <p className="text-xs text-muted-foreground">Toggle dark theme</p>
+              <p className="text-sm font-medium text-foreground">{t('darkMode')}</p>
+              <p className="text-xs text-muted-foreground">{t('toggleDarkMode')}</p>
             </div>
             <Switch
               checked={theme === "dark"}
               onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium text-foreground">{t('language')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {language === 'en' ? 'English' : 'العربية'}
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={language === "ar"}
+              onCheckedChange={(checked) => setLanguage(checked ? "ar" : "en")}
             />
           </div>
 
@@ -94,7 +112,7 @@ const Profile = () => {
             disabled={loading}
             className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
           >
-            {loading ? "Saving..." : "Save"}
+            {loading ? t('saving') : t('saveChanges')}
           </Button>
         </div>
       </div>
