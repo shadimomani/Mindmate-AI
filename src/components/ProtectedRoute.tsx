@@ -8,12 +8,17 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
+  const [checkedUserId, setCheckedUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
       setCheckingOnboarding(false);
+      setCheckedUserId(null);
       return;
     }
+    // Only re-check if user actually changed (not just token refresh)
+    if (checkedUserId === user.id) return;
+    setCheckingOnboarding(true);
     supabase
       .from('profiles')
       .select('onboarded')
@@ -21,9 +26,10 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
       .single()
       .then(({ data }) => {
         setOnboarded(data?.onboarded ?? false);
+        setCheckedUserId(user.id);
         setCheckingOnboarding(false);
       });
-  }, [user]);
+  }, [user, checkedUserId]);
 
   if (loading || checkingOnboarding) {
     return (
