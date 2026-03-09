@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, useCallback } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,13 +10,22 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
   const [checkedUserId, setCheckedUserId] = useState<string | null>(null);
 
+  const recheckOnboarding = useCallback(() => {
+    setCheckedUserId(null);
+  }, []);
+
+  // Expose recheck function globally so Onboarding can trigger it
+  useEffect(() => {
+    (window as any).__recheckOnboarding = recheckOnboarding;
+    return () => { delete (window as any).__recheckOnboarding; };
+  }, [recheckOnboarding]);
+
   useEffect(() => {
     if (!user) {
       setCheckingOnboarding(false);
       setCheckedUserId(null);
       return;
     }
-    // Only re-check if user actually changed (not just token refresh)
     if (checkedUserId === user.id) return;
     setCheckingOnboarding(true);
     supabase
@@ -46,7 +55,6 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Redirect to onboarding if not completed (unless already on onboarding)
   if (!onboarded && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }

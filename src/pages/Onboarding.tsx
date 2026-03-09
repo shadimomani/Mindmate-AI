@@ -75,6 +75,8 @@ const Onboarding = () => {
     if (user) {
       await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id);
     }
+    // Force ProtectedRoute to re-read onboarded status from DB
+    (window as any).__recheckOnboarding?.();
     navigate('/');
   };
 
