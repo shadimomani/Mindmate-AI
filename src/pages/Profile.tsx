@@ -126,7 +126,12 @@ const Profile = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/onboarding')}
+              onClick={async () => {
+                if (user) {
+                  await supabase.from('profiles').update({ onboarded: false }).eq('id', user.id);
+                }
+                navigate('/onboarding');
+              }}
             >
               {t('restart')}
             </Button>
