@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -23,11 +24,12 @@ const authSchema = z.object({
 const Auth = () => {
   const { t } = useLanguage();
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('mindmate_saved_email') || '');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem('mindmate_saved_email'));
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -62,6 +64,11 @@ const Auth = () => {
       if (error) {
         toast({ title: t('signInError'), description: error.message, variant: 'destructive' });
       } else {
+        if (rememberMe) {
+          localStorage.setItem('mindmate_saved_email', email);
+        } else {
+          localStorage.removeItem('mindmate_saved_email');
+        }
         toast({ title: t('welcomeBack'), description: t('signInToContinue') });
         navigate('/');
       }
@@ -176,6 +183,16 @@ const Auth = () => {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(!!checked)}
+                />
+                <Label htmlFor="rememberMe" className="text-sm text-muted-foreground cursor-pointer">
+                  {t('rememberMe') || 'Remember me'}
+                </Label>
               </div>
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={loading}>
                 {loading ? t('signingIn') : t('signIn')}
