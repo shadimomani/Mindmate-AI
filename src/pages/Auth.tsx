@@ -184,6 +184,16 @@ const Auth = () => {
                   </button>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(!!checked)}
+                />
+                <Label htmlFor="rememberMe" className="text-sm text-muted-foreground cursor-pointer">
+                  {t('rememberMe') || 'Remember me'}
+                </Label>
+              </div>
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={loading}>
                 {loading ? t('signingIn') : t('signIn')}
               </Button>
