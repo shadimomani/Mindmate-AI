@@ -71,7 +71,10 @@ const Onboarding = () => {
     }
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    if (user) {
+      await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id);
+    }
     navigate('/');
   };
 
