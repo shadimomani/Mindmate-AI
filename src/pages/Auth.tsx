@@ -64,6 +64,11 @@ const Auth = () => {
       if (error) {
         toast({ title: t('signInError'), description: error.message, variant: 'destructive' });
       } else {
+        if (rememberMe) {
+          localStorage.setItem('mindmate_saved_email', email);
+        } else {
+          localStorage.removeItem('mindmate_saved_email');
+        }
         toast({ title: t('welcomeBack'), description: t('signInToContinue') });
         navigate('/');
       }
