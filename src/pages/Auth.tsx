@@ -23,11 +23,12 @@ const authSchema = z.object({
 const Auth = () => {
   const { t } = useLanguage();
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('mindmate_saved_email') || '');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem('mindmate_saved_email'));
   const navigate = useNavigate();
   const { toast } = useToast();
 
