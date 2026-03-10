@@ -35,6 +35,16 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify shared secret to prevent unauthorized invocation
+    const expectedSecret = Deno.env.get("SEND_REMINDERS_SECRET");
+    const providedSecret = req.headers.get("x-webhook-secret");
+    if (!expectedSecret || providedSecret !== expectedSecret) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
