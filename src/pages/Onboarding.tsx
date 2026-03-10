@@ -73,11 +73,17 @@ const Onboarding = () => {
 
   const handleStart = async () => {
     if (user) {
-      await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id);
+      const { error } = await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id);
+      if (error) {
+        toast({ title: t('somethingWentWrong'), description: t('pleaseTryAgain'), variant: 'destructive' });
+        return;
+      }
     }
     // Force ProtectedRoute to re-read onboarded status from DB
     (window as any).__recheckOnboarding?.();
-    navigate('/');
+    // Small delay to let ProtectedRoute refetch before navigating
+    await new Promise(r => setTimeout(r, 300));
+    navigate('/dashboard', { replace: true });
   };
 
   if (step === 'questions') {
