@@ -96,8 +96,11 @@ Deno.serve(async (req) => {
         .order("sort_order", { ascending: true })
         .limit(10);
 
+      const escapeHtml = (str: string): string =>
+        str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
       const taskList = tasks && tasks.length > 0
-        ? tasks.map((t, i) => `<li style="margin-bottom:6px;color:#374151;">${i + 1}. ${t.title}${t.priority ? ` <span style="color:#9ca3af;font-size:12px;">(${t.priority})</span>` : ""}</li>`).join("")
+        ? tasks.map((t, i) => `<li style="margin-bottom:6px;color:#374151;">${i + 1}. ${escapeHtml(t.title)}${t.priority ? ` <span style="color:#9ca3af;font-size:12px;">(${escapeHtml(t.priority)})</span>` : ""}</li>`).join("")
         : null;
 
       const isAr = lang === "ar";
