@@ -38,7 +38,14 @@ Deno.serve(async (req) => {
     // Verify shared secret to prevent unauthorized invocation
     const expectedSecret = Deno.env.get("SEND_REMINDERS_SECRET");
     const providedSecret = req.headers.get("x-webhook-secret");
-    if (!expectedSecret || providedSecret !== expectedSecret) {
+    const authHeader = req.headers.get("authorization");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // Allow access via shared secret OR service role key in Authorization header
+    const hasValidSecret = expectedSecret && providedSecret === expectedSecret;
+    const hasServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+    
+    if (!hasValidSecret && !hasServiceRole) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
