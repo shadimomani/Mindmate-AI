@@ -59,5 +59,9 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to="/onboarding" replace />;
   }
 
+  if (onboarded && location.pathname === '/onboarding') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return <>{children}</>;
 };
