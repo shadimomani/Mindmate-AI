@@ -127,10 +127,14 @@ const Profile = () => {
               variant="outline"
               size="sm"
               onClick={async () => {
-                if (user) {
-                  await supabase.from('profiles').update({ onboarded: false }).eq('id', user.id);
-                }
-                navigate('/onboarding');
+                if (!user) return;
+                await Promise.all([
+                  supabase.from('profiles').update({ onboarded: false, goals_completed: false }).eq('id', user.id),
+                  supabase.from('tasks').delete().eq('user_id', user.id),
+                  supabase.from('user_goals').delete().eq('user_id', user.id),
+                ]);
+                (window as any).__recheckOnboarding?.();
+                navigate('/onboarding', { replace: true });
               }}
             >
               {t('restart')}
