@@ -164,6 +164,9 @@ const Dashboard = () => {
           </motion.div>
         )}
 
+        {/* ── Weekly Plan ── */}
+        <WeeklyPlanner />
+
         {/* ── Today's Plan ── */}
         <div className="space-y-4">
           {SECTION_KEYS.map((section, sectionIdx) => {
