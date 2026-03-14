@@ -9,6 +9,7 @@ import { Briefcase, Heart, Coffee, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
+import { WeeklyPlanner } from "@/components/dashboard/WeeklyPlanner";
 
 type TaskCategory = "work" | "personal" | "leisure";
 
