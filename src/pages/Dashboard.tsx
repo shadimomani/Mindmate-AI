@@ -9,6 +9,7 @@ import { Briefcase, Heart, Coffee, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
+import { WeeklyPlanner } from "@/components/dashboard/WeeklyPlanner";
 
 type TaskCategory = "work" | "personal" | "leisure";
 
@@ -162,6 +163,9 @@ const Dashboard = () => {
             <Progress value={overallProgress} className="h-1.5" />
           </motion.div>
         )}
+
+        {/* ── Weekly Plan ── */}
+        <WeeklyPlanner />
 
         {/* ── Today's Plan ── */}
         <div className="space-y-4">

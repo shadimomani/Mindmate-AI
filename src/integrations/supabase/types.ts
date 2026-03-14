@@ -543,6 +543,54 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_plans: {
+        Row: {
+          brain_dump: string
+          commitment_score: number | null
+          created_at: string
+          feedback_message: string | null
+          id: string
+          reflection_completion: string | null
+          reflection_difficulty: string | null
+          schedule: Json | null
+          status: string
+          task_priorities: Json | null
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          brain_dump: string
+          commitment_score?: number | null
+          created_at?: string
+          feedback_message?: string | null
+          id?: string
+          reflection_completion?: string | null
+          reflection_difficulty?: string | null
+          schedule?: Json | null
+          status?: string
+          task_priorities?: Json | null
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          brain_dump?: string
+          commitment_score?: number | null
+          created_at?: string
+          feedback_message?: string | null
+          id?: string
+          reflection_completion?: string | null
+          reflection_difficulty?: string | null
+          schedule?: Json | null
+          status?: string
+          task_priorities?: Json | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
