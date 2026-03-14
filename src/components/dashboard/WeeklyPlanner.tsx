@@ -445,7 +445,7 @@ export const WeeklyPlanner = () => {
         {savedPlan.task_priorities.length > 0 && (
           <div className="px-4 pb-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              {t("topPriorities")}
+              {t("weeklyTopPriorities")}
             </p>
             <div className="space-y-1.5">
               {savedPlan.task_priorities.map((priority, idx) => (

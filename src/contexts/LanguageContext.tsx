@@ -238,7 +238,7 @@ export const translations: Translations = {
   commitmentLabel: { en: "Commitment", ar: "الالتزام" },
   replan: { en: "Replan", ar: "أعد التخطيط" },
   restDay: { en: "Rest & reflect", ar: "راحة وتأمل" },
-  topPriorities: { en: "Top Priorities", ar: "الأولويات القصوى" },
+  weeklyTopPriorities: { en: "Top Priorities", ar: "الأولويات القصوى" },
   weeklyPlanGenerated: { en: "Weekly plan ready!", ar: "الخطة الأسبوعية جاهزة!" },
   back: { en: "Back", ar: "رجوع" },
   next: { en: "Next", ar: "التالي" },
