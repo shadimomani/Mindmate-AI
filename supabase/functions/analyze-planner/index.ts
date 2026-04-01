@@ -242,9 +242,8 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in analyze-planner function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    console.error('Error in analyze-planner function');
+    return new Response(JSON.stringify({ error: 'Failed to analyze planner page' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
