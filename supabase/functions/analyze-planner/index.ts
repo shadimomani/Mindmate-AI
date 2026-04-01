@@ -112,7 +112,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('Authenticated user:', user.id);
+    console.log('Authenticated user for planner analysis');
 
     const { image } = await req.json();
     
