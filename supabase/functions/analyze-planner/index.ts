@@ -154,7 +154,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
-    console.log('Analyzing planner image for user:', user.id, 'with learning profile:', !!learningProfile);
+    console.log('Analyzing planner image with learning profile:', !!learningProfile);
 
     // Generate adaptive system prompt based on learning
     const systemPrompt = generateSystemPrompt(learningProfile);
