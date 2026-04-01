@@ -112,7 +112,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('Authenticated user:', user.id);
+    console.log('Authenticated user for planner analysis');
 
     const { image } = await req.json();
     
@@ -154,7 +154,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
-    console.log('Analyzing planner image for user:', user.id, 'with learning profile:', !!learningProfile);
+    console.log('Analyzing planner image with learning profile:', !!learningProfile);
 
     // Generate adaptive system prompt based on learning
     const systemPrompt = generateSystemPrompt(learningProfile);
@@ -182,7 +182,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Lovable AI error:', response.status, errorText);
+      console.error('AI gateway error occurred');
       
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
@@ -202,7 +202,7 @@ serve(async (req) => {
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
 
-    console.log('AI response:', content);
+    console.log('AI response received successfully');
 
     // Parse the JSON response
     let analysis;
@@ -242,9 +242,8 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in analyze-planner function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    console.error('Error in analyze-planner function');
+    return new Response(JSON.stringify({ error: 'Failed to analyze planner page' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
