@@ -202,7 +202,7 @@ serve(async (req) => {
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
 
-    console.log('AI response:', content);
+    console.log('AI response received successfully');
 
     // Parse the JSON response
     let analysis;
