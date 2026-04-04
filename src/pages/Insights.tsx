@@ -7,6 +7,7 @@ import { subDays, format, startOfDay } from "date-fns";
 import { motion } from "framer-motion";
 import { Check, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 
 interface DayRecord {
   label: string;
@@ -152,6 +153,9 @@ const Insights = () => {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* ── Performance Chart ── */}
+        <PerformanceChart />
 
         <motion.div
           initial={{ opacity: 0, y: 8 }}
