@@ -164,8 +164,7 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* ── Performance Chart ── */}
-        <PerformanceChart />
+        {/* ── Weekly Plan ── */}
 
         {/* ── Weekly Plan ── */}
         <WeeklyPlanner />
