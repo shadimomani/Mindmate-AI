@@ -1,3 +1,4 @@
+/* Language context – provides i18n translations */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Language = 'en' | 'ar';
