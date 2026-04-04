@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { WeeklyPlanner } from "@/components/dashboard/WeeklyPlanner";
-import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 
 type TaskCategory = "work" | "personal" | "leisure";
 
