@@ -368,6 +368,14 @@ export const translations: Translations = {
   guideProTip3: { en: "Use reflections to track your emotional well-being", ar: "استخدم التأملات لتتبع صحتك النفسية" },
   guideProTip4: { en: "Review your insights weekly to spot patterns", ar: "راجع رؤاك أسبوعياً لاكتشاف الأنماط" },
   guideProTip5: { en: "Chat with AI when you need motivation or guidance", ar: "تحدث مع الذكاء الاصطناعي عندما تحتاج تحفيزاً أو توجيهاً" },
+
+  // Performance Chart
+  weeklyPerformance: { en: "Weekly Performance", ar: "أداء الأسبوع" },
+  last7Days: { en: "Last 7 days", ar: "آخر 7 أيام" },
+  perfStreak: { en: "streak", ar: "متتالي" },
+  weeklyRating: { en: "Weekly Rating", ar: "تقييم الأسبوع" },
+  avgCompletion: { en: "Avg Completion", ar: "متوسط الإنجاز" },
+  perfCompletionRate: { en: "Completion", ar: "الإنجاز" },
 };
 
 interface LanguageContextType {
