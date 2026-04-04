@@ -142,7 +142,7 @@ export const PerformanceChart = () => {
           <Flame className="w-4 h-4 text-accent" />
           <span className="text-sm font-bold text-accent tabular-nums">{streak}</span>
           <span className="text-[10px] text-muted-foreground font-medium">
-            {t("dayStreak")}
+            {t("perfStreak")}
           </span>
         </div>
       </div>
