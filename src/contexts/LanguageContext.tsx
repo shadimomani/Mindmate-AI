@@ -372,10 +372,10 @@ export const translations: Translations = {
   // Performance Chart
   weeklyPerformance: { en: "Weekly Performance", ar: "أداء الأسبوع" },
   last7Days: { en: "Last 7 days", ar: "آخر 7 أيام" },
-  dayStreak: { en: "streak", ar: "متتالي" },
+  perfStreak: { en: "streak", ar: "متتالي" },
   weeklyRating: { en: "Weekly Rating", ar: "تقييم الأسبوع" },
   avgCompletion: { en: "Avg Completion", ar: "متوسط الإنجاز" },
-  completionRate: { en: "Completion", ar: "الإنجاز" },
+  perfCompletionRate: { en: "Completion", ar: "الإنجاز" },
 };
 
 interface LanguageContextType {
