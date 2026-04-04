@@ -85,26 +85,43 @@ export const WeeklyPlanner = () => {
       if (dayOfWeek === 0) monday.setDate(now.getDate() + 1);
       else if (dayOfWeek === 6) monday.setDate(now.getDate() + 2);
       else monday.setDate(now.getDate() - (dayOfWeek - 1));
-      const weekStartStr = monday.toISOString().split("T")[0];
 
+      // Use local date to avoid UTC timezone mismatch
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const weekStartStr = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
+
+      // Try current week first, then also check if there's an active plan nearby
       const { data } = await supabase
         .from("weekly_plans")
         .select("*")
         .eq("user_id", user.id)
-        .eq("week_start", weekStartStr)
-        .single();
+        .eq("status", "active")
+        .order("week_start", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (data) {
-        setSavedPlan({
-          id: data.id,
-          week_start: data.week_start,
-          schedule: (data.schedule as any) || [],
-          task_priorities: (data.task_priorities as any) || [],
-          commitment_score: data.commitment_score || 5,
-          feedback_message: data.feedback_message || "",
-          status: data.status || "active",
-        });
-        setStep("plan");
+        // Check if this plan is for the current or upcoming week
+        const planStart = new Date(data.week_start + "T00:00:00");
+        const planEnd = new Date(planStart);
+        planEnd.setDate(planEnd.getDate() + 6); // Saturday
+
+        const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        if (todayMidnight <= planEnd) {
+          setSavedPlan({
+            id: data.id,
+            week_start: data.week_start,
+            schedule: (data.schedule as any) || [],
+            task_priorities: (data.task_priorities as any) || [],
+            commitment_score: data.commitment_score || 5,
+            feedback_message: data.feedback_message || "",
+            status: data.status || "active",
+          });
+          setStep("plan");
+        } else if (isSaturday) {
+          setStep("prompt");
+        }
       } else if (isSaturday) {
         setStep("prompt");
       }
