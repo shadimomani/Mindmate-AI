@@ -134,7 +134,8 @@ function SortableTaskCard({
       </button>
 
       <button
-        onClick={() => onToggle(task.id, task.completed)}
+        onClick={(e) => { e.stopPropagation(); onToggle(task.id, task.completed); }}
+        onPointerDown={(e) => e.stopPropagation()}
         className="shrink-0 touch-manipulation"
       >
         {task.completed ? (
