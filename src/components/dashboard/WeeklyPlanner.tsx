@@ -23,13 +23,23 @@ import { cn } from "@/lib/utils";
 
 type Step = "prompt" | "brain_dump" | "reflection" | "generating" | "plan";
 
+interface WeeklyScheduleTask {
+  title: string;
+  completed: boolean;
+}
+
 interface WeeklyScheduleDay {
+  day: string;
+  tasks: WeeklyScheduleTask[];
+}
+
+interface GeneratedWeeklyScheduleDay {
   day: string;
   tasks: string[];
 }
 
 interface WeeklyPlan {
-  weekly_schedule: WeeklyScheduleDay[];
+  weekly_schedule: GeneratedWeeklyScheduleDay[];
   task_priorities: string[];
   commitment_score: number;
   feedback_message: string;
@@ -54,6 +64,41 @@ const DAY_COLORS: Record<string, string> = {
   Friday: "217 72% 60%",
   Saturday: "152 60% 48%",
   Sunday: "0 0% 60%",
+};
+
+const normalizeWeeklySchedule = (schedule: unknown): WeeklyScheduleDay[] => {
+  if (!Array.isArray(schedule)) return [];
+
+  return schedule
+    .map((day) => {
+      if (!day || typeof day !== "object" || !("day" in day) || typeof day.day !== "string") {
+        return null;
+      }
+
+      const rawTasks = "tasks" in day && Array.isArray(day.tasks) ? day.tasks : [];
+      const tasks = rawTasks
+        .map((task) => {
+          if (typeof task === "string") {
+            return { title: task, completed: false };
+          }
+
+          if (task && typeof task === "object" && "title" in task && typeof task.title === "string") {
+            return {
+              title: task.title,
+              completed: "completed" in task ? Boolean(task.completed) : false,
+            };
+          }
+
+          return null;
+        })
+        .filter((task): task is WeeklyScheduleTask => task !== null);
+
+      return {
+        day: day.day,
+        tasks,
+      };
+    })
+    .filter((day): day is WeeklyScheduleDay => day !== null);
 };
 
 export const WeeklyPlanner = () => {
@@ -112,7 +157,7 @@ export const WeeklyPlanner = () => {
           setSavedPlan({
             id: data.id,
             week_start: data.week_start,
-            schedule: (data.schedule as any) || [],
+            schedule: normalizeWeeklySchedule(data.schedule),
             task_priorities: (data.task_priorities as any) || [],
             commitment_score: data.commitment_score || 5,
             feedback_message: data.feedback_message || "",
@@ -147,11 +192,12 @@ export const WeeklyPlanner = () => {
       if (error) throw error;
 
       const weeklyPlan: WeeklyPlan = data;
+      const normalizedSchedule = normalizeWeeklySchedule(weeklyPlan.weekly_schedule);
       setPlan(weeklyPlan);
       setSavedPlan({
         id: "",
         week_start: weeklyPlan.week_start,
-        schedule: weeklyPlan.weekly_schedule,
+        schedule: normalizedSchedule,
         task_priorities: weeklyPlan.task_priorities,
         commitment_score: weeklyPlan.commitment_score,
         feedback_message: weeklyPlan.feedback_message,
@@ -170,6 +216,40 @@ export const WeeklyPlanner = () => {
       setStep("brain_dump");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const toggleScheduledTask = async (dayName: string, taskIndex: number) => {
+    if (!user || !savedPlan) return;
+
+    const currentPlan = savedPlan;
+    const updatedSchedule = currentPlan.schedule.map((day) =>
+      day.day === dayName
+        ? {
+            ...day,
+            tasks: day.tasks.map((task, index) =>
+              index === taskIndex ? { ...task, completed: !task.completed } : task
+            ),
+          }
+        : day
+    );
+
+    setSavedPlan({ ...currentPlan, schedule: updatedSchedule });
+
+    const { error } = await supabase
+      .from("weekly_plans")
+      .update({ schedule: updatedSchedule as any })
+      .eq("user_id", user.id)
+      .eq("week_start", currentPlan.week_start)
+      .eq("status", currentPlan.status);
+
+    if (error) {
+      setSavedPlan(currentPlan);
+      toast({
+        title: t("error"),
+        description: "Failed to update weekly task",
+        variant: "destructive",
+      });
     }
   };
 
@@ -444,10 +524,33 @@ export const WeeklyPlanner = () => {
 
                 <div className="space-y-1.5">
                   {day.tasks.map((task, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-sm">
-                      <Circle className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 mt-0.5" />
-                      <span className="text-foreground/80">{task}</span>
-                    </div>
+                    <button
+                      key={`${day.day}-${idx}-${task.title}`}
+                      type="button"
+                      onClick={() => toggleScheduledTask(day.day, idx)}
+                      aria-pressed={task.completed}
+                      className={cn(
+                        "w-full flex items-start gap-2 text-sm text-left rounded-lg px-1.5 py-1 transition-colors",
+                        task.completed ? "bg-accent/5" : "hover:bg-accent/5"
+                      )}
+                    >
+                      {task.completed ? (
+                        <CheckCircle2
+                          className="w-3.5 h-3.5 shrink-0 mt-0.5"
+                          style={{ color: `hsl(${color})` }}
+                        />
+                      ) : (
+                        <Circle className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                      )}
+                      <span
+                        className={cn(
+                          "transition-colors",
+                          task.completed ? "text-muted-foreground line-through" : "text-foreground/80"
+                        )}
+                      >
+                        {task.title}
+                      </span>
+                    </button>
                   ))}
                   {day.tasks.length === 0 && (
                     <p className="text-xs text-muted-foreground italic">{t("restDay")}</p>
