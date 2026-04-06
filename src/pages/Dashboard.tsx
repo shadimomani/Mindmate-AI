@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { WeeklyPlanner } from "@/components/dashboard/WeeklyPlanner";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 type TaskCategory = "work" | "personal" | "leisure";
 
