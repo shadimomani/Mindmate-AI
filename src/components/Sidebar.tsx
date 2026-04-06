@@ -28,7 +28,10 @@ export const AppSidebar = () => {
     { name: t('dashboard'), href: "/", icon: Home },
     { name: t('insights'), href: "/insights", icon: BarChart3 },
     { name: t('profile'), href: "/profile", icon: User },
+    { name: isRTL ? "عن التطبيق" : "About", href: "/about", icon: Info },
   ];
+
+  const { isRTL } = useLanguage();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
