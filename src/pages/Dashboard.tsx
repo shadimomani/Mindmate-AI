@@ -32,7 +32,9 @@ const SECTION_KEYS: { id: TaskCategory; labelKey: string; icon: typeof Briefcase
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [limits, setLimits] = useState<AdaptiveLimits | null>(null);
