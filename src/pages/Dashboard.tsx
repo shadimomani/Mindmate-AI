@@ -42,6 +42,23 @@ const Dashboard = () => {
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? t('goodMorning') : currentHour < 18 ? t('goodAfternoon') : t('goodEvening');
 
+  // One-time guide message
+  useEffect(() => {
+    if (!user) return;
+    const key = `mindmate_about_shown_${user.id}`;
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, "1");
+      setTimeout(() => {
+        toast({
+          title: isRTL ? "💡 تعرف على التطبيق" : "💡 Learn About the App",
+          description: isRTL
+            ? "تقدر تزور صفحة 'عن التطبيق' من القائمة الجانبية لتعرف كيف تستفيد من MindMate."
+            : "Visit the 'About' page from the sidebar to learn how to get the most out of MindMate.",
+        });
+      }, 2000);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
 
