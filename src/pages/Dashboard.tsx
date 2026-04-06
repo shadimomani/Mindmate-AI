@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { WeeklyPlanner } from "@/components/dashboard/WeeklyPlanner";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 type TaskCategory = "work" | "personal" | "leisure";
 
@@ -30,13 +32,32 @@ const SECTION_KEYS: { id: TaskCategory; labelKey: string; icon: typeof Briefcase
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [limits, setLimits] = useState<AdaptiveLimits | null>(null);
 
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? t('goodMorning') : currentHour < 18 ? t('goodAfternoon') : t('goodEvening');
+
+  // One-time guide message
+  useEffect(() => {
+    if (!user) return;
+    const key = `mindmate_about_shown_${user.id}`;
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, "1");
+      setTimeout(() => {
+        toast({
+          title: isRTL ? "💡 تعرف على التطبيق" : "💡 Learn About the App",
+          description: isRTL
+            ? "تقدر تزور صفحة 'عن التطبيق' من القائمة الجانبية لتعرف كيف تستفيد من MindMate."
+            : "Visit the 'About' page from the sidebar to learn how to get the most out of MindMate.",
+        });
+      }, 2000);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;

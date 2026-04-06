@@ -1,4 +1,4 @@
-import { Home, BarChart3, User, LogOut } from "lucide-react";
+import { Home, BarChart3, User, LogOut, Info } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -22,12 +22,13 @@ export const AppSidebar = () => {
   const { toast } = useToast();
   const location = useLocation();
   const { state } = useSidebar();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   const navigation = [
     { name: t('dashboard'), href: "/", icon: Home },
     { name: t('insights'), href: "/insights", icon: BarChart3 },
     { name: t('profile'), href: "/profile", icon: User },
+    { name: isRTL ? "عن التطبيق" : "About", href: "/about", icon: Info },
   ];
 
   const handleLogout = async () => {
