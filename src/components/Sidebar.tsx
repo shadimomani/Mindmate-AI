@@ -22,7 +22,7 @@ export const AppSidebar = () => {
   const { toast } = useToast();
   const location = useLocation();
   const { state } = useSidebar();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   const navigation = [
     { name: t('dashboard'), href: "/", icon: Home },
@@ -30,8 +30,6 @@ export const AppSidebar = () => {
     { name: t('profile'), href: "/profile", icon: User },
     { name: isRTL ? "عن التطبيق" : "About", href: "/about", icon: Info },
   ];
-
-  const { isRTL } = useLanguage();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
