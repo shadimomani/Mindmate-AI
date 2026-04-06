@@ -1,4 +1,4 @@
-import { Home, BarChart3, User, LogOut } from "lucide-react";
+import { Home, BarChart3, User, LogOut, Info } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
