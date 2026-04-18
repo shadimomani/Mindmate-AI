@@ -24,6 +24,14 @@ serve(async (req) => {
 
     const { brain_dump, reflection_completion, reflection_difficulty } = await req.json();
     if (!brain_dump) throw new Error("Brain dump is required");
+    if (typeof brain_dump !== "string") throw new Error("Invalid brain_dump type");
+    if (brain_dump.length > 3000) throw new Error("brain_dump must be 1-3000 characters");
+    if (reflection_completion && (typeof reflection_completion !== "string" || reflection_completion.length > 100)) {
+      throw new Error("reflection_completion must be a string up to 100 characters");
+    }
+    if (reflection_difficulty && (typeof reflection_difficulty !== "string" || reflection_difficulty.length > 1000)) {
+      throw new Error("reflection_difficulty must be a string up to 1000 characters");
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("AI service not configured");
