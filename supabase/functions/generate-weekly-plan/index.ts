@@ -50,7 +50,22 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .order("week_start", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
+
+    // Fetch AI memories about the user (top 20 by importance + recency)
+    const { data: memoriesData } = await supabase
+      .from("user_memories")
+      .select("content, memory_type, importance")
+      .eq("user_id", user.id)
+      .order("importance", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const memories = memoriesData || [];
+    const memoriesBlock = memories.length > 0
+      ? memories.map((m: any) => `- [${m.memory_type}] ${m.content}`).join("\n")
+      : "No personal memories saved yet.";
+    const usedMemoryContents = memories.map((m: any) => m.content);
 
     const systemPrompt = `You are Mindmate's weekly planning engine. Your role is to analyze a user's weekly brain dump, evaluate their past execution behavior, estimate realistic commitment capacity, and generate a structured but achievable weekly plan.
 
@@ -63,6 +78,11 @@ CORE PRINCIPLES:
 USER CONTEXT:
 ${goals ? `Main goal: ${goals.main_goal}\nBiggest problem: ${goals.biggest_problem}` : "No goals set yet."}
 ${lastPlan ? `Last week's commitment score: ${lastPlan.commitment_score}/10` : "First weekly plan."}
+
+WHAT YOU KNOW ABOUT THE USER (from their saved memories — USE these to personalize the plan):
+${memoriesBlock}
+
+When you generate the plan, your feedback_message MUST briefly mention 1-2 specific memories you used (e.g. "Since you focus best in the mornings, I scheduled deep-work tasks before noon."). This builds trust through transparency.
 
 COMMITMENT ALGORITHM:
 ${reflection_completion ? `
@@ -236,6 +256,7 @@ You MUST use the generate_weekly_plan tool to return your response.`;
       commitment_score: plan.commitment_score,
       feedback_message: plan.feedback_message,
       week_start: weekStartStr,
+      memories_used: usedMemoryContents,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
