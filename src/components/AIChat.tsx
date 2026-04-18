@@ -9,12 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { convertToBase64 } from "@/lib/toBase64";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { WeeklyPlanProposal, parseWeeklyPlan, type WeeklyPlanProposalData } from "@/components/chat/WeeklyPlanProposal";
 interface Message {
   id: string;
   text: string;
   sender: "user" | "assistant";
   timestamp: Date;
   image?: string;
+  weeklyPlan?: WeeklyPlanProposalData | null;
 }
 interface Conversation {
   id: string;
@@ -74,13 +76,20 @@ export const AIChat = () => {
       ascending: true
     });
     if (!error && data) {
-      setMessages(data.map(msg => ({
-        id: msg.id,
-        text: msg.content,
-        sender: msg.role as "user" | "assistant",
-        timestamp: new Date(msg.created_at),
-        image: msg.image_url || undefined
-      })));
+      setMessages(data.map(msg => {
+        const text = msg.content;
+        const { cleanText, plan } = msg.role === "assistant"
+          ? parseWeeklyPlan(text)
+          : { cleanText: text, plan: null };
+        return {
+          id: msg.id,
+          text: cleanText,
+          sender: msg.role as "user" | "assistant",
+          timestamp: new Date(msg.created_at),
+          image: msg.image_url || undefined,
+          weeklyPlan: plan,
+        };
+      }));
       setCurrentConversationId(conversationId);
       setShowHistory(false);
     }
@@ -172,14 +181,17 @@ export const AIChat = () => {
         }
       });
       if (error) throw error;
+      const rawText = data.reply?.content || "Sorry, I couldn't analyze the image.";
+      const { cleanText, plan } = parseWeeklyPlan(rawText);
       const aiResponse: Message = {
         id: crypto.randomUUID(),
-        text: data.reply?.content || "Sorry, I couldn't analyze the image.",
+        text: cleanText,
         sender: "assistant",
-        timestamp: new Date()
+        timestamp: new Date(),
+        weeklyPlan: plan,
       };
       setMessages(prev => [...prev, aiResponse]);
-      await saveMessage(convId, 'assistant', aiResponse.text);
+      await saveMessage(convId, 'assistant', rawText);
     } catch (error: any) {
       console.error("Error analyzing image:", error);
       toast({
@@ -241,14 +253,17 @@ export const AIChat = () => {
         }
       });
       if (error) throw error;
+      const rawText = data.reply?.content || "Sorry, I couldn't process your request.";
+      const { cleanText, plan } = parseWeeklyPlan(rawText);
       const aiResponse: Message = {
         id: crypto.randomUUID(),
-        text: data.reply?.content || "Sorry, I couldn't process your request.",
+        text: cleanText,
         sender: "assistant",
-        timestamp: new Date()
+        timestamp: new Date(),
+        weeklyPlan: plan,
       };
       setMessages(prev => [...prev, aiResponse]);
-      await saveMessage(convId, 'assistant', aiResponse.text);
+      await saveMessage(convId, 'assistant', rawText);
     } catch (error: any) {
       console.error("Error communicating with AI:", error);
       let errorMessage = "Sorry, I'm having trouble connecting right now. Please try again.";
@@ -340,7 +355,12 @@ export const AIChat = () => {
                   {messages.map(message => <div key={message.id} className={`flex ${message.sender === "user" ? (isRTL ? "justify-start" : "justify-end") : (isRTL ? "justify-end" : "justify-start")}`}>
                       <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 ${message.sender === "user" ? "bg-accent text-accent-foreground" : "bg-muted text-foreground"}`}>
                         {message.image && <img src={message.image} alt="Uploaded" className="max-w-full rounded-lg mb-2" />}
-                        <p className="text-xs sm:text-sm font-sans break-words whitespace-pre-wrap">{message.text}</p>
+                        {message.text && (
+                          <p className="text-xs sm:text-sm font-sans break-words whitespace-pre-wrap">{message.text}</p>
+                        )}
+                        {message.weeklyPlan && (
+                          <WeeklyPlanProposal plan={message.weeklyPlan} />
+                        )}
                         <p className={`text-xs opacity-70 mt-2 ${isRTL ? 'text-left' : 'text-right'}`}>
                           {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
