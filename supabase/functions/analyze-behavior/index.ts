@@ -300,7 +300,7 @@ serve(async (req) => {
         .from("user_learning_profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       // Detect learning signals
       const { signals, sessionSignals } = detectLearningSignals(recentLogs || [], logData);
@@ -374,7 +374,7 @@ serve(async (req) => {
         .from("user_learning_profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== "PGRST116") {
         console.error("Error fetching learning profile:", error);
@@ -423,7 +423,7 @@ serve(async (req) => {
         .from("user_learning_profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       return new Response(JSON.stringify({ 
         logs: logs || [], 
