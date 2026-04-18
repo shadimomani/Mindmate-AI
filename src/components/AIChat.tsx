@@ -9,12 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { convertToBase64 } from "@/lib/toBase64";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { WeeklyPlanProposal, parseWeeklyPlan, type WeeklyPlanProposalData } from "@/components/chat/WeeklyPlanProposal";
 interface Message {
   id: string;
   text: string;
   sender: "user" | "assistant";
   timestamp: Date;
   image?: string;
+  weeklyPlan?: WeeklyPlanProposalData | null;
 }
 interface Conversation {
   id: string;
