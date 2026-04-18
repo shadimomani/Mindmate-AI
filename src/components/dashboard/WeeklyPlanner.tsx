@@ -44,6 +44,7 @@ interface WeeklyPlan {
   commitment_score: number;
   feedback_message: string;
   week_start: string;
+  memories_used?: string[];
 }
 
 interface SavedPlan {
@@ -103,7 +104,7 @@ const normalizeWeeklySchedule = (schedule: unknown): WeeklyScheduleDay[] => {
 
 export const WeeklyPlanner = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { toast } = useToast();
 
   const [step, setStep] = useState<Step>("prompt");
@@ -486,6 +487,21 @@ export const WeeklyPlanner = () => {
             <p className="mt-3 text-sm text-muted-foreground italic font-serif">
               "{savedPlan.feedback_message}"
             </p>
+          )}
+
+          {/* Memories used (transparency) */}
+          {plan?.memories_used && plan.memories_used.length > 0 && (
+            <div className="mt-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary mb-1.5 flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3" />
+                {isRTL ? "بناءً على ما قلتلي" : "Based on what you told me"}
+              </p>
+              <ul className="space-y-1">
+                {plan.memories_used.slice(0, 5).map((m, i) => (
+                  <li key={i} className="text-xs text-foreground/80 leading-relaxed">• {m}</li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 

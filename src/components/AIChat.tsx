@@ -241,6 +241,12 @@ export const AIChat = () => {
     if (messages.length === 0) {
       await updateConversationTitle(convId, messageText);
     }
+    // Fire-and-forget: extract memories from user message in background
+    if (messageText.length >= 20) {
+      supabase.functions.invoke('extract-memory', {
+        body: { text: messageText, source: 'chat' }
+      }).catch(err => console.warn('Memory extract failed:', err));
+    }
     try {
       const {
         data,

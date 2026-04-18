@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { WeeklyPlanner } from "@/components/dashboard/WeeklyPlanner";
+import { AIMemoryInput } from "@/components/dashboard/AIMemoryInput";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -185,7 +186,8 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* ── Weekly Plan ── */}
+        {/* ── AI Memory ── */}
+        <AIMemoryInput />
 
         {/* ── Weekly Plan ── */}
         <WeeklyPlanner />

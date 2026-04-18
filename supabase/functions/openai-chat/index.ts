@@ -320,6 +320,23 @@ serve(async (req) => {
       return createSecurityResponse(500, { error: 'AI service configuration error' }, ctx);
     }
 
+    // Fetch user memories to personalize responses
+    const memorySupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } }
+    );
+    const { data: memoriesData } = await memorySupabase
+      .from('user_memories')
+      .select('content, memory_type, importance')
+      .eq('user_id', auth.userId!)
+      .order('importance', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(20);
+    const memoriesBlock = (memoriesData && memoriesData.length > 0)
+      ? memoriesData.map((m: any) => `- [${m.memory_type}] ${m.content}`).join('\n')
+      : 'No saved memories yet.';
+
     // Build messages array with system prompt and history
     const messages: Array<{ role: string; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> }> = [
       { 
@@ -327,6 +344,11 @@ serve(async (req) => {
         content: `You are MindMate AI, a helpful and empathetic personal assistant. You help users with daily planning, habit tracking, mood reflection, and personal growth. 
         
 You have access to the conversation history to provide personalized and contextual responses. Remember past conversations and refer to them when relevant. Be warm, supportive, and encouraging.
+
+WHAT YOU KNOW ABOUT THIS USER (from their saved memories):
+${memoriesBlock}
+
+Use these memories to personalize your replies. When you reference one, briefly acknowledge it (e.g. "Since you mentioned you focus best in the mornings…") so the user sees you're listening. Never invent memories that aren't listed.
 
 Key behaviors:
 - Remember what users have told you in previous messages
