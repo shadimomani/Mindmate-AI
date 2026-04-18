@@ -24,6 +24,12 @@ serve(async (req) => {
 
     const { biggest_problem, main_goal } = await req.json();
     if (!biggest_problem || !main_goal) throw new Error("Both answers are required");
+    if (typeof biggest_problem !== "string" || typeof main_goal !== "string") {
+      throw new Error("Invalid input types");
+    }
+    const MAX_LEN = 2000;
+    if (biggest_problem.length > MAX_LEN) throw new Error("biggest_problem must be 1-2000 characters");
+    if (main_goal.length > MAX_LEN) throw new Error("main_goal must be 1-2000 characters");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("AI service not configured");
