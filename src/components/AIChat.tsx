@@ -76,13 +76,20 @@ export const AIChat = () => {
       ascending: true
     });
     if (!error && data) {
-      setMessages(data.map(msg => ({
-        id: msg.id,
-        text: msg.content,
-        sender: msg.role as "user" | "assistant",
-        timestamp: new Date(msg.created_at),
-        image: msg.image_url || undefined
-      })));
+      setMessages(data.map(msg => {
+        const text = msg.content;
+        const { cleanText, plan } = msg.role === "assistant"
+          ? parseWeeklyPlan(text)
+          : { cleanText: text, plan: null };
+        return {
+          id: msg.id,
+          text: cleanText,
+          sender: msg.role as "user" | "assistant",
+          timestamp: new Date(msg.created_at),
+          image: msg.image_url || undefined,
+          weeklyPlan: plan,
+        };
+      }));
       setCurrentConversationId(conversationId);
       setShowHistory(false);
     }
@@ -174,14 +181,17 @@ export const AIChat = () => {
         }
       });
       if (error) throw error;
+      const rawText = data.reply?.content || "Sorry, I couldn't analyze the image.";
+      const { cleanText, plan } = parseWeeklyPlan(rawText);
       const aiResponse: Message = {
         id: crypto.randomUUID(),
-        text: data.reply?.content || "Sorry, I couldn't analyze the image.",
+        text: cleanText,
         sender: "assistant",
-        timestamp: new Date()
+        timestamp: new Date(),
+        weeklyPlan: plan,
       };
       setMessages(prev => [...prev, aiResponse]);
-      await saveMessage(convId, 'assistant', aiResponse.text);
+      await saveMessage(convId, 'assistant', rawText);
     } catch (error: any) {
       console.error("Error analyzing image:", error);
       toast({
