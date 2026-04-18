@@ -44,6 +44,7 @@ interface WeeklyPlan {
   commitment_score: number;
   feedback_message: string;
   week_start: string;
+  memories_used?: string[];
 }
 
 interface SavedPlan {
