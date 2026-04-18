@@ -104,7 +104,7 @@ const normalizeWeeklySchedule = (schedule: unknown): WeeklyScheduleDay[] => {
 
 export const WeeklyPlanner = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { toast } = useToast();
 
   const [step, setStep] = useState<Step>("prompt");
