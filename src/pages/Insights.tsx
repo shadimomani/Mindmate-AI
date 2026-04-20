@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Check, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
+import { LearningInsights } from "@/components/dashboard/LearningInsights";
 
 interface DayRecord {
   label: string;
@@ -156,6 +157,9 @@ const Insights = () => {
 
         {/* ── Performance Chart ── */}
         <PerformanceChart />
+
+        {/* ── AI Learning Insights ── */}
+        <LearningInsights />
 
         <motion.div
           initial={{ opacity: 0, y: 8 }}
