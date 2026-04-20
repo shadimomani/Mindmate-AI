@@ -33,11 +33,12 @@ export const TaskList = () => {
 
     const todayStart = startOfDay(new Date()).toISOString();
 
-    // Delete tasks from previous days
+    // Delete only INCOMPLETE old tasks — keep completed ones for weekly insights
     await supabase
       .from('tasks')
       .delete()
       .eq('user_id', user.id)
+      .eq('completed', false)
       .lt('created_at', todayStart);
 
     // Load only today's tasks
