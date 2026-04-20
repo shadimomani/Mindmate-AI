@@ -55,7 +55,7 @@ describe("Insights page", () => {
     render(<Insights />);
     await waitFor(() => {
       expect(screen.getByText("yourWeek")).toBeInTheDocument();
-      expect(screen.getByText("consistencyOverPerfention" === "x" ? "x" : "consistencyOverPerfection")).toBeInTheDocument();
+      expect(screen.getByText("consistencyOverPerfection")).toBeInTheDocument();
     });
   });
 
