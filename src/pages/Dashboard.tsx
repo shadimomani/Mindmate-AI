@@ -74,7 +74,13 @@ const Dashboard = () => {
       calculateAdaptiveLimits(user.id).then(setLimits);
 
       const todayStart = startOfDay(new Date()).toISOString();
-      await supabase.from("tasks").delete().eq("user_id", user.id).lt("created_at", todayStart);
+      // Only purge INCOMPLETE old tasks — keep completed history for Insights/analytics
+      await supabase
+        .from("tasks")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("completed", false)
+        .lt("created_at", todayStart);
 
       const { data } = await supabase
         .from("tasks")

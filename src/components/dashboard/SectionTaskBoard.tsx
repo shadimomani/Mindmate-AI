@@ -207,7 +207,13 @@ export const SectionTaskBoard = () => {
     if (!user) return;
     const todayStart = startOfDay(new Date()).toISOString();
 
-    await supabase.from("tasks").delete().eq("user_id", user.id).lt("created_at", todayStart);
+    // Keep completed tasks from prior days so weekly insights have data
+    await supabase
+      .from("tasks")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("completed", false)
+      .lt("created_at", todayStart);
 
     const { data } = await supabase
       .from("tasks")
