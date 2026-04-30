@@ -62,7 +62,10 @@ Deno.serve(async (req) => {
       .from("profiles")
       .select("id, display_name, language, last_reminder_phrase");
 
-    if (profilesError) throw profilesError;
+    if (profilesError) {
+      console.error("send-reminders profiles error:", profilesError);
+      throw new Error("Failed to fetch profiles");
+    }
     if (!profiles || profiles.length === 0) {
       return new Response(JSON.stringify({ message: "No users to notify" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

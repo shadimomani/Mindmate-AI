@@ -127,7 +127,10 @@ Rules:
       .insert(inserts)
       .select();
 
-    if (saveError) throw saveError;
+    if (saveError) {
+      console.error("extract-memory save error:", saveError);
+      throw new Error("Database operation failed");
+    }
 
     return new Response(JSON.stringify({ saved: saved?.length || 0, memories: saved }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -135,7 +138,7 @@ Rules:
 
   } catch (e) {
     console.error("extract-memory error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "An unexpected error occurred" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
