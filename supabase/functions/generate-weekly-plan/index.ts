@@ -263,7 +263,7 @@ You MUST use the generate_weekly_plan tool to return your response.`;
 
   } catch (e) {
     console.error("generate-weekly-plan error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "An unexpected error occurred" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
