@@ -13,6 +13,7 @@ import Insights from "./pages/Insights";
 import Profile from "./pages/Profile";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 
@@ -31,6 +32,7 @@ const App = () => (
               <Routes>
                 <Route path="/about" element={<About />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
