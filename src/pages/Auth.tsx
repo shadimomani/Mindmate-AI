@@ -225,6 +225,16 @@ const Auth = () => {
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={loading}>
                 {loading ? t('signingIn') : t('signIn')}
               </Button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={loading}
+                  className="text-sm text-accent hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
             </form>
           )}
 
