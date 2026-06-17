@@ -54,7 +54,8 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const emailCheck = z.string().email().max(255).safeParse(email);
+      const normalizedEmail = email.trim().toLowerCase();
+      const emailCheck = z.string().email().max(255).safeParse(normalizedEmail);
       if (!emailCheck.success) {
         toast({ title: t('validationError'), description: 'Invalid email address', variant: 'destructive' });
         setLoading(false);
@@ -65,12 +66,12 @@ const Auth = () => {
         setLoading(false);
         return;
       }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (error) {
         toast({ title: t('signInError'), description: error.message, variant: 'destructive' });
       } else {
         if (rememberMe) {
-          localStorage.setItem('mindmate_saved_email', email);
+          localStorage.setItem('mindmate_saved_email', normalizedEmail);
         } else {
           localStorage.removeItem('mindmate_saved_email');
         }
@@ -85,14 +86,15 @@ const Auth = () => {
   };
 
   const handleForgotPassword = async () => {
-    const emailCheck = z.string().email().max(255).safeParse(email);
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailCheck = z.string().email().max(255).safeParse(normalizedEmail);
     if (!emailCheck.success) {
       toast({ title: t('validationError'), description: 'Enter your email above first', variant: 'destructive' });
       return;
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) {
@@ -111,14 +113,15 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const validation = authSchema.safeParse({ email, password, displayName });
+      const normalizedEmail = email.trim().toLowerCase();
+      const validation = authSchema.safeParse({ email: normalizedEmail, password, displayName });
       if (!validation.success) {
         toast({ title: t('validationError'), description: validation.error.errors[0].message, variant: 'destructive' });
         setLoading(false);
         return;
       }
       const { error } = await supabase.auth.signUp({
-        email, password,
+        email: normalizedEmail, password,
         options: { emailRedirectTo: `${window.location.origin}/`, data: { display_name: displayName } },
       });
       if (error) {
