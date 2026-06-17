@@ -54,9 +54,14 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const validation = authSchema.safeParse({ email, password });
-      if (!validation.success) {
-        toast({ title: t('validationError'), description: validation.error.errors[0].message, variant: 'destructive' });
+      const emailCheck = z.string().email().max(255).safeParse(email);
+      if (!emailCheck.success) {
+        toast({ title: t('validationError'), description: 'Invalid email address', variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+      if (!password) {
+        toast({ title: t('validationError'), description: 'Password is required', variant: 'destructive' });
         setLoading(false);
         return;
       }
@@ -71,6 +76,29 @@ const Auth = () => {
         }
         toast({ title: t('welcomeBack'), description: t('signInToContinue') });
         navigate('/');
+      }
+    } catch {
+      toast({ title: t('error'), description: t('unexpectedError'), variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const emailCheck = z.string().email().max(255).safeParse(email);
+    if (!emailCheck.success) {
+      toast({ title: t('validationError'), description: 'Enter your email above first', variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast({ title: t('error'), description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Check your email', description: 'We sent you a password reset link.' });
       }
     } catch {
       toast({ title: t('error'), description: t('unexpectedError'), variant: 'destructive' });
