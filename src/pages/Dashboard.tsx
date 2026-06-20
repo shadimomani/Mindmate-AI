@@ -128,9 +128,12 @@ const Dashboard = () => {
   const completedTasks = tasks.filter((t) => t.completed).length;
   const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+  const animatedScore = useCountUp(commitmentScore ?? 0, 1200);
+
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto px-1 sm:px-0 space-y-8 sm:space-y-10 animate-in fade-in duration-500">
+      <PageTransition>
+      <div className="max-w-2xl mx-auto px-1 sm:px-0 space-y-8 sm:space-y-10">
         {/* ── Greeting ── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -156,8 +159,8 @@ const Dashboard = () => {
             className="flex items-center gap-4 bg-card rounded-2xl border border-border p-5 shadow-soft"
           >
             <div className="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-accent/10">
-              <span className="text-2xl font-serif font-bold text-accent">
-                {commitmentScore}
+              <span className="text-2xl font-serif font-bold text-accent tabular-nums">
+                {Math.round(animatedScore)}
               </span>
               <span className="text-[10px] text-muted-foreground font-medium tracking-wide">
                 / 10
