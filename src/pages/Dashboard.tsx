@@ -28,6 +28,11 @@ interface Task {
   created_at: string;
 }
 
+const ProgressPercent = ({ value }: { value: number }) => {
+  const v = useCountUp(value, 1000);
+  return <span className="font-medium tabular-nums">{Math.round(v)}%</span>;
+};
+
 const SECTION_KEYS: { id: TaskCategory; labelKey: string; icon: typeof Briefcase; color: string; soft: string }[] = [
   { id: "work", labelKey: "work", icon: Briefcase, color: "var(--section-work)", soft: "var(--section-work-soft)" },
   { id: "personal", labelKey: "life", icon: Heart, color: "var(--section-personal)", soft: "var(--section-personal-soft)" },
@@ -192,7 +197,7 @@ const Dashboard = () => {
               <span>
                 {completedTasks} {t('ofCompleted')} {totalTasks} {t('completed')}
               </span>
-              <span className="font-medium tabular-nums">{Math.round(useCountUp(overallProgress, 1000))}%</span>
+              <ProgressPercent value={overallProgress} />
             </div>
             <AnimatedProgress value={overallProgress} />
           </motion.div>
