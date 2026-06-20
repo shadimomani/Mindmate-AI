@@ -191,9 +191,9 @@ const Dashboard = () => {
               <span>
                 {completedTasks} {t('ofCompleted')} {totalTasks} {t('completed')}
               </span>
-              <span className="font-medium">{overallProgress}%</span>
+              <span className="font-medium tabular-nums">{Math.round(useCountUp(overallProgress, 1000))}%</span>
             </div>
-            <Progress value={overallProgress} className="h-1.5" />
+            <AnimatedProgress value={overallProgress} />
           </motion.div>
         )}
 
