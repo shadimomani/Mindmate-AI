@@ -329,6 +329,7 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+      </PageTransition>
     </DashboardLayout>
   );
 };
