@@ -13,6 +13,8 @@ import { WeeklyPlanner } from "@/components/dashboard/WeeklyPlanner";
 import { AIMemoryInput } from "@/components/dashboard/AIMemoryInput";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useCountUp } from "@/hooks/useCountUp";
+import { PageTransition } from "@/components/PageTransition";
 
 type TaskCategory = "work" | "personal" | "leisure";
 
