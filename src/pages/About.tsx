@@ -16,6 +16,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ParticleNetwork } from "@/components/three/ParticleNetwork";
+import { AIOrb } from "@/components/three/AIOrb";
+import { Parallax } from "@/components/Parallax";
 
 const About = () => {
   const navigate = useNavigate();
@@ -107,9 +110,21 @@ const About = () => {
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       {/* Hero */}
-      <section className="relative overflow-hidden px-4 py-16 sm:py-24">
+      <section className="relative overflow-hidden px-4 py-16 sm:py-24 min-h-[600px]">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-background to-secondary/20" />
-        <div className="relative max-w-3xl mx-auto text-center space-y-6">
+        <ParticleNetwork className="opacity-70" />
+
+        {/* Floating AI Orb */}
+        <div className="absolute inset-y-0 right-0 hidden lg:flex items-center justify-end pr-8 pointer-events-none">
+          <Parallax strength={10}>
+            <AIOrb size={380} />
+          </Parallax>
+        </div>
+        <div className="absolute inset-x-0 top-2 flex lg:hidden justify-center pointer-events-none opacity-80">
+          <AIOrb size={200} />
+        </div>
+
+        <Parallax strength={6} className="relative max-w-3xl mx-auto text-center space-y-6 pt-44 lg:pt-0">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -158,7 +173,7 @@ const About = () => {
               {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
             </Button>
           </motion.div>
-        </div>
+        </Parallax>
       </section>
 
       {/* Problem Section */}

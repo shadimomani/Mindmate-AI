@@ -9,10 +9,13 @@ import { Briefcase, Heart, Coffee, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
+import { AnimatedProgress } from "@/components/AnimatedProgress";
 import { WeeklyPlanner } from "@/components/dashboard/WeeklyPlanner";
 import { AIMemoryInput } from "@/components/dashboard/AIMemoryInput";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useCountUp } from "@/hooks/useCountUp";
+import { PageTransition } from "@/components/PageTransition";
 
 type TaskCategory = "work" | "personal" | "leisure";
 
@@ -24,6 +27,11 @@ interface Task {
   estimated_time: number;
   created_at: string;
 }
+
+const ProgressPercent = ({ value }: { value: number }) => {
+  const v = useCountUp(value, 1000);
+  return <span className="font-medium tabular-nums">{Math.round(v)}%</span>;
+};
 
 const SECTION_KEYS: { id: TaskCategory; labelKey: string; icon: typeof Briefcase; color: string; soft: string }[] = [
   { id: "work", labelKey: "work", icon: Briefcase, color: "var(--section-work)", soft: "var(--section-work-soft)" },
@@ -126,9 +134,12 @@ const Dashboard = () => {
   const completedTasks = tasks.filter((t) => t.completed).length;
   const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+  const animatedScore = useCountUp(commitmentScore ?? 0, 1200);
+
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto px-1 sm:px-0 space-y-8 sm:space-y-10 animate-in fade-in duration-500">
+      <PageTransition>
+      <div className="max-w-2xl mx-auto px-1 sm:px-0 space-y-8 sm:space-y-10">
         {/* ── Greeting ── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -154,8 +165,8 @@ const Dashboard = () => {
             className="flex items-center gap-4 bg-card rounded-2xl border border-border p-5 shadow-soft"
           >
             <div className="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-accent/10">
-              <span className="text-2xl font-serif font-bold text-accent">
-                {commitmentScore}
+              <span className="text-2xl font-serif font-bold text-accent tabular-nums">
+                {Math.round(animatedScore)}
               </span>
               <span className="text-[10px] text-muted-foreground font-medium tracking-wide">
                 / 10
@@ -186,9 +197,9 @@ const Dashboard = () => {
               <span>
                 {completedTasks} {t('ofCompleted')} {totalTasks} {t('completed')}
               </span>
-              <span className="font-medium">{overallProgress}%</span>
+              <ProgressPercent value={overallProgress} />
             </div>
-            <Progress value={overallProgress} className="h-1.5" />
+            <AnimatedProgress value={overallProgress} />
           </motion.div>
         )}
 
@@ -279,16 +290,26 @@ const Dashboard = () => {
                           : "bg-background/70 hover:bg-background/90"
                       )}
                     >
-                      {task.completed ? (
-                        <CheckCircle2
-                          className="w-5 h-5 shrink-0"
-                          style={{ color: `hsl(${section.color})` }}
-                        />
-                      ) : (
-                        <Circle className="w-5 h-5 text-muted-foreground/50 shrink-0" />
-                      )}
+                      <motion.span
+                        key={task.completed ? "done" : "pending"}
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                        className="shrink-0 inline-flex"
+                      >
+                        {task.completed ? (
+                          <CheckCircle2
+                            className="w-5 h-5"
+                            style={{ color: `hsl(${section.color})` }}
+                          />
+                        ) : (
+                          <Circle className="w-5 h-5 text-muted-foreground/50" />
+                        )}
+                      </motion.span>
 
-                      <span
+                      <motion.span
+                        animate={{ opacity: task.completed ? 0.55 : 1 }}
+                        transition={{ duration: 0.3 }}
                         className={cn(
                           "flex-1 text-sm sm:text-base",
                           task.completed
@@ -297,7 +318,7 @@ const Dashboard = () => {
                         )}
                       >
                         {task.title}
-                      </span>
+                      </motion.span>
 
                       {task.estimated_time > 0 && (
                         <span className="text-[11px] text-muted-foreground/60 tabular-nums shrink-0">
@@ -324,6 +345,7 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+      </PageTransition>
     </DashboardLayout>
   );
 };
