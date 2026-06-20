@@ -290,16 +290,26 @@ const Dashboard = () => {
                           : "bg-background/70 hover:bg-background/90"
                       )}
                     >
-                      {task.completed ? (
-                        <CheckCircle2
-                          className="w-5 h-5 shrink-0"
-                          style={{ color: `hsl(${section.color})` }}
-                        />
-                      ) : (
-                        <Circle className="w-5 h-5 text-muted-foreground/50 shrink-0" />
-                      )}
+                      <motion.span
+                        key={task.completed ? "done" : "pending"}
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                        className="shrink-0 inline-flex"
+                      >
+                        {task.completed ? (
+                          <CheckCircle2
+                            className="w-5 h-5"
+                            style={{ color: `hsl(${section.color})` }}
+                          />
+                        ) : (
+                          <Circle className="w-5 h-5 text-muted-foreground/50" />
+                        )}
+                      </motion.span>
 
-                      <span
+                      <motion.span
+                        animate={{ opacity: task.completed ? 0.55 : 1 }}
+                        transition={{ duration: 0.3 }}
                         className={cn(
                           "flex-1 text-sm sm:text-base",
                           task.completed
@@ -308,7 +318,7 @@ const Dashboard = () => {
                         )}
                       >
                         {task.title}
-                      </span>
+                      </motion.span>
 
                       {task.estimated_time > 0 && (
                         <span className="text-[11px] text-muted-foreground/60 tabular-nums shrink-0">
