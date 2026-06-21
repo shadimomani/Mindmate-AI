@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useCountUp } from "@/hooks/useCountUp";
 import { PageTransition } from "@/components/PageTransition";
+import { SEO } from "@/components/SEO";
 
 type TaskCategory = "work" | "personal" | "leisure";
 
@@ -138,6 +139,11 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
+      <SEO
+        path="/dashboard"
+        title="Your Daily Planner — MindMate"
+        description="Plan your day with MindMate: a focused list of up to five micro-tasks across Work, Life, and Balance, adapted to your progress."
+      />
       <PageTransition>
       <div className="max-w-2xl mx-auto px-1 sm:px-0 space-y-8 sm:space-y-10">
         {/* ── Greeting ── */}

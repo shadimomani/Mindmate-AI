@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { PageTransition } from '@/components/PageTransition';
+import { SEO } from '@/components/SEO';
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address').max(255, 'Email too long'),
@@ -141,7 +142,12 @@ const Auth = () => {
 
   return (
     <PageTransition>
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
+    <SEO
+      path="/auth"
+      title="Sign in to MindMate — AI Productivity Companion"
+      description="Sign in or create your MindMate account to start planning fewer, better tasks each day with an AI productivity companion."
+    />
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
       <div className="w-full max-w-md">
         <div className="bg-card rounded-2xl shadow-soft border border-border p-8">
           <div className="text-center mb-8">
@@ -250,7 +256,7 @@ const Auth = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
     </PageTransition>
   );
 };

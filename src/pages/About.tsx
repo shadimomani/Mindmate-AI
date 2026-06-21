@@ -19,6 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ParticleNetwork } from "@/components/three/ParticleNetwork";
 import { AIOrb } from "@/components/three/AIOrb";
 import { Parallax } from "@/components/Parallax";
+import { SEO } from "@/components/SEO";
 
 const About = () => {
   const navigate = useNavigate();
@@ -108,7 +109,13 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
+    <>
+      <SEO
+        path="/about"
+        title="About MindMate — AI Productivity Assistant"
+        description="Discover the philosophy behind MindMate: fewer, better tasks each day across Work, Life, and Balance, guided by a supportive AI companion."
+      />
+    <main className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       {/* Hero */}
       <section className="relative overflow-hidden px-4 py-16 sm:py-24 min-h-[600px]">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-background to-secondary/20" />
@@ -328,7 +335,8 @@ const About = () => {
           </Button>
         </motion.div>
       </section>
-    </div>
+    </main>
+    </>
   );
 };
 
