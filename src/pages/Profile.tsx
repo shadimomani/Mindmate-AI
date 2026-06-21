@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { SEO } from "@/components/SEO";
 import { User, Globe, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -53,6 +54,11 @@ const Profile = () => {
 
   return (
     <DashboardLayout>
+      <SEO
+        path="/profile"
+        title="Your Profile — MindMate"
+        description="Manage your MindMate profile: theme, language, and personal preferences for your AI productivity companion."
+      />
       <div className="max-w-lg mx-auto space-y-8 animate-in fade-in duration-500">
         <div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">{t('profile')}</h1>

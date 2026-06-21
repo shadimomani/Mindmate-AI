@@ -20,6 +20,7 @@ import {
   Coffee,
   Loader2,
 } from "lucide-react";
+import { SEO } from "@/components/SEO";
 import { cn } from "@/lib/utils";
 
 type Domain = "work" | "personal" | "leisure";
@@ -165,6 +166,11 @@ const Insights = () => {
 
   return (
     <DashboardLayout>
+      <SEO
+        path="/insights"
+        title="Your Productivity Insights — MindMate"
+        description="Track streaks, completion rates, and domain balance across Work, Life, and Balance with MindMate's productivity insights."
+      />
       <div
         dir={isRTL ? "rtl" : "ltr"}
         className="max-w-2xl mx-auto px-1 sm:px-0 space-y-6 pb-12 animate-in fade-in duration-500"
