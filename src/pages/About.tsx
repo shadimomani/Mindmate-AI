@@ -335,7 +335,8 @@ const About = () => {
           </Button>
         </motion.div>
       </section>
-    </div>
+    </main>
+    </>
   );
 };
 
