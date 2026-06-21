@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { PageTransition } from '@/components/PageTransition';
+import { SEO } from '@/components/SEO';
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address').max(255, 'Email too long'),
