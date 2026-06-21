@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://sage-mind-assistant.lovable.app/sitemap.xml

@@ -14,7 +14,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <AppSidebar />
         <SidebarInset className="flex-1">
           <header className="flex h-14 sm:h-16 items-center gap-2 border-b px-3 sm:px-6">
-            <SidebarTrigger />
+            <SidebarTrigger aria-label="Toggle sidebar navigation" />
             <h2 className="text-lg sm:text-xl font-semibold">MindMate</h2>
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">

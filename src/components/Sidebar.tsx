@@ -48,7 +48,7 @@ export const AppSidebar = () => {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-border p-4">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="MindMate" className="w-10 h-10 shrink-0" />
+          <img src={logo} alt="MindMate Productivity Assistant logo" className="w-10 h-10 shrink-0" />
           {state === "expanded" && (
             <div>
               <h1 className="text-xl font-serif font-bold text-foreground">{t('appName')}</h1>

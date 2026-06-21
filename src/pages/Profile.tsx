@@ -88,6 +88,7 @@ const Profile = () => {
               <p className="text-xs text-muted-foreground">{t('toggleDarkMode')}</p>
             </div>
             <Switch
+              aria-label="Toggle dark mode"
               checked={theme === "dark"}
               onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
             />
@@ -104,6 +105,7 @@ const Profile = () => {
               </div>
             </div>
             <Switch
+              aria-label="Toggle Arabic language"
               checked={language === "ar"}
               onCheckedChange={async (checked) => {
                 const newLang = checked ? "ar" : "en";

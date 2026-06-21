@@ -1,0 +1,10 @@
+# MindMate
+
+> MindMate is an AI productivity companion that helps you plan fewer, better tasks each day across Work, Life, and Balance.
+
+MindMate keeps daily planning simple: a maximum of 5 micro-tasks across 3 domains, with adaptive AI suggestions and supportive feedback.
+
+## Pages
+
+- [About](/about): What MindMate is and the philosophy behind fewer, better tasks.
+- [Sign in](/auth): Sign in or create a MindMate account.
