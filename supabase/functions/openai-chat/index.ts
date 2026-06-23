@@ -193,10 +193,17 @@ function validateAndSanitizeInput(body: unknown, ctx: SecurityContext): Validati
       if (msg.role !== 'user' && msg.role !== 'assistant') continue;
       if (typeof msg.content !== 'string') continue;
       
+      let historyImage: string | undefined;
+      if (typeof msg.image === 'string') {
+        const validFmt = /^data:image\/(jpeg|jpg|png|gif|webp);base64,/i.test(msg.image);
+        const validSize = msg.image.length <= MAX_IMAGE_SIZE_BYTES * 1.33;
+        if (validFmt && validSize) historyImage = msg.image;
+      }
+
       sanitizedHistory.push({
         role: msg.role,
         content: msg.content.substring(0, MAX_MESSAGE_LENGTH),
-        image: typeof msg.image === 'string' ? msg.image : undefined
+        image: historyImage
       });
     }
   }
