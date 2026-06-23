@@ -21,6 +21,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { ParticleNetwork } from "@/components/three/ParticleNetwork";
+import { AIOrb } from "@/components/three/AIOrb";
 import { cn } from "@/lib/utils";
 
 type Domain = "work" | "personal" | "leisure";
@@ -185,6 +187,11 @@ const Insights = () => {
               "linear-gradient(135deg, hsl(var(--section-work)/0.18) 0%, hsl(var(--section-personal)/0.18) 50%, hsl(var(--section-leisure)/0.18) 100%)",
           }}
         >
+          <ParticleNetwork className="opacity-60" />
+          <div className="pointer-events-none absolute -top-10 -right-6 hidden sm:block opacity-80">
+            <AIOrb size={180} />
+          </div>
+          <div className="relative">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
             <Sparkles className="w-3.5 h-3.5" />
             {t("yourWeek")}
@@ -209,6 +216,7 @@ const Insights = () => {
             <div className="inline-flex items-center gap-1.5 bg-background/60 backdrop-blur rounded-full px-3 py-1.5 text-xs font-medium border border-border">
               {activeDays}/7 {language === "ar" ? "أيام نشطة" : "active days"}
             </div>
+          </div>
           </div>
         </motion.div>
 

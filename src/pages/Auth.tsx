@@ -11,6 +11,9 @@ import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { PageTransition } from '@/components/PageTransition';
 import { SEO } from '@/components/SEO';
+import { ParticleNetwork } from '@/components/three/ParticleNetwork';
+import { AIOrb } from '@/components/three/AIOrb';
+import { motion } from 'framer-motion';
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address').max(255, 'Email too long'),
@@ -147,8 +150,20 @@ const Auth = () => {
       title="Sign in to MindMate — AI Productivity Companion"
       description="Sign in or create your MindMate account to start planning fewer, better tasks each day with an AI productivity companion."
     />
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
-      <div className="w-full max-w-md">
+    <main className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4 overflow-hidden">
+      <ParticleNetwork className="opacity-70" />
+      <div className="pointer-events-none absolute -top-10 -right-10 hidden md:block opacity-80">
+        <AIOrb size={260} />
+      </div>
+      <div className="pointer-events-none absolute -bottom-16 -left-16 hidden md:block opacity-60">
+        <AIOrb size={220} />
+      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative w-full max-w-md"
+      >
         <div className="bg-card rounded-2xl shadow-soft border border-border p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
@@ -255,7 +270,7 @@ const Auth = () => {
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </main>
     </PageTransition>
   );
