@@ -217,6 +217,7 @@ const Insights = () => {
               {activeDays}/7 {language === "ar" ? "أيام نشطة" : "active days"}
             </div>
           </div>
+          </div>
         </motion.div>
 
         {/* Weekly streak bars */}
