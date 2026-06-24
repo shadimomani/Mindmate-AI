@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ParticleNetwork } from "@/components/three/ParticleNetwork";
 import { AIOrb } from "@/components/three/AIOrb";
+import { AboutScene } from "@/components/three/scenes/AboutScene";
 import { Parallax } from "@/components/Parallax";
 import { SEO } from "@/components/SEO";
 
@@ -120,6 +121,7 @@ const About = () => {
       <section className="relative overflow-hidden px-4 py-16 sm:py-24 min-h-[600px]">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-background to-secondary/20" />
         <ParticleNetwork className="opacity-70" />
+        <AboutScene className="opacity-90" />
 
         {/* Floating AI Orb */}
         <div className="absolute inset-y-0 right-0 hidden lg:flex items-center justify-end pr-8 pointer-events-none">
