@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ProfileScene } from "@/components/three/scenes/ProfileScene";
 
 const Profile = () => {
   const [displayName, setDisplayName] = useState("");
@@ -59,8 +60,11 @@ const Profile = () => {
         title="Your Profile — MindMate"
         description="Manage your MindMate profile: theme, language, and personal preferences for your AI productivity companion."
       />
-      <div className="max-w-lg mx-auto space-y-8 animate-in fade-in duration-500">
-        <div>
+      <div className="relative max-w-lg mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="pointer-events-none absolute inset-x-0 -top-8 h-[380px] -z-10 overflow-hidden rounded-3xl">
+          <ProfileScene orbColor="#E5B964" progress={0.6} />
+        </div>
+        <div className="relative">
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">{t('profile')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t('manageAccountSettings')}</p>
         </div>

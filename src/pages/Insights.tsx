@@ -21,8 +21,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
-import { ParticleNetwork } from "@/components/three/ParticleNetwork";
-import { AIOrb } from "@/components/three/AIOrb";
+import { InsightsScene } from "@/components/three/scenes/InsightsScene";
 import { cn } from "@/lib/utils";
 
 type Domain = "work" | "personal" | "leisure";
@@ -187,10 +186,10 @@ const Insights = () => {
               "linear-gradient(135deg, hsl(var(--section-work)/0.18) 0%, hsl(var(--section-personal)/0.18) 50%, hsl(var(--section-leisure)/0.18) 100%)",
           }}
         >
-          <ParticleNetwork className="opacity-60" />
-          <div className="pointer-events-none absolute -top-10 -right-6 hidden sm:block opacity-80">
-            <AIOrb size={180} />
-          </div>
+          <InsightsScene
+            data={days.map((d) => (maxDayCompleted > 0 ? d.completed / maxDayCompleted : 0))}
+            className="opacity-80"
+          />
           <div className="relative">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
             <Sparkles className="w-3.5 h-3.5" />
