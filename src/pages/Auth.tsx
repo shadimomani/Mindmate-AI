@@ -11,8 +11,7 @@ import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { PageTransition } from '@/components/PageTransition';
 import { SEO } from '@/components/SEO';
-import { ParticleNetwork } from '@/components/three/ParticleNetwork';
-import { AIOrb } from '@/components/three/AIOrb';
+import { LoginScene } from '@/components/three/scenes/LoginScene';
 import { motion } from 'framer-motion';
 
 const authSchema = z.object({
@@ -151,13 +150,7 @@ const Auth = () => {
       description="Sign in or create your MindMate account to start planning fewer, better tasks each day with an AI productivity companion."
     />
     <main className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4 overflow-hidden">
-      <ParticleNetwork className="opacity-70" />
-      <div className="pointer-events-none absolute -top-10 -right-10 hidden md:block opacity-80">
-        <AIOrb size={260} />
-      </div>
-      <div className="pointer-events-none absolute -bottom-16 -left-16 hidden md:block opacity-60">
-        <AIOrb size={220} />
-      </div>
+      <LoginScene className="absolute inset-0">{null}</LoginScene>
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}

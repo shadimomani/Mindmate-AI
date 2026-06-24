@@ -17,8 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useCountUp } from "@/hooks/useCountUp";
 import { PageTransition } from "@/components/PageTransition";
 import { SEO } from "@/components/SEO";
-import { ParticleNetwork } from "@/components/three/ParticleNetwork";
-import { AIOrb } from "@/components/three/AIOrb";
+import { DashboardScene, type OrbitNode } from "@/components/three/scenes/DashboardScene";
 
 type TaskCategory = "work" | "personal" | "leisure";
 
@@ -148,15 +147,25 @@ const Dashboard = () => {
       />
       <PageTransition>
       <div className="relative max-w-2xl mx-auto px-1 sm:px-0 space-y-8 sm:space-y-10">
-        <div className="pointer-events-none absolute inset-x-0 -top-10 h-[420px] -z-10 overflow-hidden rounded-3xl">
-          <ParticleNetwork className="opacity-50" />
+        <div className="pointer-events-none absolute inset-x-0 -top-10 h-[480px] -z-10 overflow-hidden rounded-3xl">
+          <DashboardScene
+            activity={totalTasks > 0 ? completedTasks / totalTasks : 0.3}
+            nodes={tasks.map<OrbitNode>((task) => ({
+              id: task.id,
+              status: task.completed
+                ? "done"
+                : (Date.now() - new Date(task.created_at).getTime() > 24 * 3600 * 1000
+                    ? "overdue"
+                    : "upcoming"),
+            }))}
+          />
         </div>
         {/* ── Greeting ── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative pt-2 flex items-start justify-between gap-4"
+          className="relative pt-2"
         >
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground">
@@ -166,9 +175,6 @@ const Dashboard = () => {
             <p className="mt-1.5 text-sm sm:text-base text-muted-foreground">
               {t('herePlanForToday')}
             </p>
-          </div>
-          <div className="pointer-events-none shrink-0 hidden sm:block -mt-4 -mr-2">
-            <AIOrb size={120} />
           </div>
         </motion.div>
 
