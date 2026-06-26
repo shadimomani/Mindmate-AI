@@ -274,8 +274,69 @@ serve(async (req) => {
     const { action, behaviorData } = await req.json();
 
     if (action === "log_behavior") {
-      // Log new behavior and update learning profile
-      const logData: BehaviorLog = behaviorData;
+      // Validate behaviorData strictly to prevent corrupted learning profiles
+      const isIsoDateTime = (s: unknown) =>
+        typeof s === "string" && s.length <= 40 && !Number.isNaN(Date.parse(s));
+      const isYmd = (s: unknown) =>
+        typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
+      const isIntInRange = (n: unknown, min: number, max: number) =>
+        typeof n === "number" && Number.isInteger(n) && n >= min && n <= max;
+
+      if (!behaviorData || typeof behaviorData !== "object") {
+        return new Response(JSON.stringify({ error: "Invalid behaviorData" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const b = behaviorData as Record<string, unknown>;
+      const errors: string[] = [];
+      if (!isIntInRange(b.planned_tasks, 0, 50)) errors.push("planned_tasks must be an integer 0-50");
+      if (!isIntInRange(b.completed_tasks, 0, 50)) errors.push("completed_tasks must be an integer 0-50");
+      if ((b.completed_tasks as number) > (b.planned_tasks as number)) errors.push("completed_tasks cannot exceed planned_tasks");
+      if (!isYmd(b.planned_date)) errors.push("planned_date must be YYYY-MM-DD");
+      if (b.predicted_commitment_score !== undefined && b.predicted_commitment_score !== null) {
+        if (typeof b.predicted_commitment_score !== "number" || b.predicted_commitment_score < 0 || b.predicted_commitment_score > 100) {
+          errors.push("predicted_commitment_score must be 0-100");
+        }
+      }
+      if (b.mood_at_planning !== undefined && b.mood_at_planning !== null && (typeof b.mood_at_planning !== "string" || (b.mood_at_planning as string).length > 50)) {
+        errors.push("mood_at_planning invalid");
+      }
+      if (b.mood_at_completion !== undefined && b.mood_at_completion !== null && (typeof b.mood_at_completion !== "string" || (b.mood_at_completion as string).length > 50)) {
+        errors.push("mood_at_completion invalid");
+      }
+      const validateTimeArr = (arr: unknown, name: string) => {
+        if (arr === undefined || arr === null) return [];
+        if (!Array.isArray(arr) || arr.length > 100) {
+          errors.push(`${name} must be an array of at most 100 ISO datetime strings`);
+          return [];
+        }
+        const filtered = arr.filter((x) => isIsoDateTime(x)) as string[];
+        if (filtered.length !== arr.length) errors.push(`${name} contains invalid datetime entries`);
+        return filtered;
+      };
+      const completedTimes = validateTimeArr(b.tasks_completed_times, "tasks_completed_times");
+      const skippedTimes = validateTimeArr(b.tasks_skipped_times, "tasks_skipped_times");
+
+      if (errors.length) {
+        return new Response(JSON.stringify({ error: "Validation failed", details: errors }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const logData: BehaviorLog = {
+        planned_tasks: b.planned_tasks as number,
+        completed_tasks: b.completed_tasks as number,
+        predicted_commitment_score: b.predicted_commitment_score as number | undefined,
+        mood_at_planning: b.mood_at_planning as string | undefined,
+        mood_at_completion: b.mood_at_completion as string | undefined,
+        planned_date: b.planned_date as string,
+        tasks_completed_times: completedTimes,
+        tasks_skipped_times: skippedTimes,
+      };
+
       
       // Calculate completion rate and prediction accuracy
       const completionRate = logData.planned_tasks > 0 
