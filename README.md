@@ -26,7 +26,7 @@ npm run dev
 
 ## 🌐 Live Demo
 
-[[sage-mind-assistant.lovable.app](https://sage-mind-assistant.lovable.app)](https://mindmate-assestant.lovable.app/about)
+(https://mindmate-assestant.lovable.app/about)
 
 ## 📄 License
 
