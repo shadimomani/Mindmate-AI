@@ -118,7 +118,7 @@ export function LearningInsights() {
   const isRTL = language === "ar";
 
   const { data: profile, isLoading: profileLoading } = useLearningProfile();
-  const { data: insights, isLoading: insightsLoading } = useBehaviorInsights();
+  const { isLoading: insightsLoading } = useBehaviorInsights();
 
   const isLoading = profileLoading || insightsLoading;
 

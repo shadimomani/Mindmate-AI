@@ -35,7 +35,7 @@ export const MoodTracker = () => {
         title: 'Mood logged',
         description: `You're feeling ${mood.label.toLowerCase()} today`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to log mood',

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { CheckSquare, Heart, MessageCircle, Plus, Check, Send } from "lucide-react";
+import { Heart, Plus, Check, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 
 type DemoType = "tasks" | "habits" | "chat" | "mood";

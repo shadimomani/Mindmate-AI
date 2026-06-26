@@ -54,7 +54,7 @@ export const ReflectionCard = () => {
         description: 'Reflection saved successfully',
       });
       setReflection("");
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to save reflection',

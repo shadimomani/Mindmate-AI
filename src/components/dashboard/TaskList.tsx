@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { taskSchema } from "@/lib/validation";
-import { format, startOfDay } from "date-fns";
+import { startOfDay } from "date-fns";
 
 interface Task {
   id: string;
@@ -93,7 +93,7 @@ export const TaskList = () => {
 
       setTasks([data, ...tasks]);
       setNewTask("");
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to add task',

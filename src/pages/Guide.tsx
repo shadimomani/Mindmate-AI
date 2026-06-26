@@ -10,7 +10,6 @@ import {
   Image, 
   User, 
   Brain,
-  Sparkles,
   Target,
   Lightbulb,
   Rocket,

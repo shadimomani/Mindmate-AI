@@ -87,7 +87,7 @@ const Onboarding = () => {
     navigate('/dashboard', { replace: true });
   };
 
-  const stepNumber = step === 'question1' ? 1 : step === 'question2' ? 2 : null;
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/3 px-4 flex items-center justify-center">

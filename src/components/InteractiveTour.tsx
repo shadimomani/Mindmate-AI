@@ -8,7 +8,6 @@ import {
   Home, 
   CheckSquare, 
   Heart, 
-  Brain, 
   MessageCircle, 
   BarChart3, 
   Image, 
@@ -17,7 +16,6 @@ import {
   PartyPopper
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const TOUR_COMPLETED_KEY = "mindmate_tour_completed";

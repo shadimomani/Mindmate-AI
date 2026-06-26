@@ -8,12 +8,12 @@ import { calculateAdaptiveLimits, type AdaptiveLimits } from "@/lib/commitmentAl
 import { Briefcase, Heart, Coffee, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { Progress } from "@/components/ui/progress";
+
 import { AnimatedProgress } from "@/components/AnimatedProgress";
 import { WeeklyPlanner } from "@/components/dashboard/WeeklyPlanner";
 import { AIMemoryInput } from "@/components/dashboard/AIMemoryInput";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+
 import { useCountUp } from "@/hooks/useCountUp";
 import { PageTransition } from "@/components/PageTransition";
 import { SEO } from "@/components/SEO";
@@ -45,7 +45,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { t, isRTL } = useLanguage();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  
   const [displayName, setDisplayName] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [limits, setLimits] = useState<AdaptiveLimits | null>(null);

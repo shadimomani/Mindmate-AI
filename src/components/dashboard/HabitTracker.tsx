@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { format, subDays, startOfDay } from "date-fns";
+import { format, subDays } from "date-fns";
 
 interface Habit {
   id: string;
@@ -187,7 +187,7 @@ export const HabitTracker = () => {
               <span className="text-sm text-muted-foreground">{habit.streak} day streak</span>
             </div>
             <div className="flex gap-1">
-              {last7Days.map((dateStr, i) => {
+              {last7Days.map((dateStr) => {
                 const isCompleted = habit.completions.includes(dateStr);
                 const isToday = dateStr === today;
                 return (
