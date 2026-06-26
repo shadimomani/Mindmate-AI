@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Briefcase, Heart, Coffee, Clock, Loader2, Sparkles, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { SEO } from '@/components/SEO';
 
 interface GeneratedTask {
   title: string;
@@ -90,6 +91,11 @@ const Onboarding = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/3 px-4 flex items-center justify-center">
+      <SEO
+        title="Get started with MindMate — 60-second onboarding"
+        description="Set up MindMate in under a minute. Tell us your biggest challenge and goal so we can plan a focused, supportive first day for you."
+        path="/onboarding"
+      />
       <AnimatePresence mode="wait" custom={direction}>
         {step === 'welcome' && (
           <motion.div
