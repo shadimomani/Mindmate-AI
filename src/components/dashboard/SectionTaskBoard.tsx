@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Briefcase, Heart, Coffee, Plus, GripVertical, Circle, CheckCircle2, Clock, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -93,7 +93,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   low: "bg-muted text-muted-foreground border-border",
 };
 
-const TIME_OPTIONS = [5, 10, 15, 30, 45, 60, 90];
+
 
 // Sortable Task Card
 function SortableTaskCard({
@@ -182,9 +182,6 @@ function TaskDragOverlay({ task }: { task: Task }) {
 
 export const SectionTaskBoard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTaskInputs, setNewTaskInputs] = useState<Record<TaskCategory, string>>({ work: "", personal: "", leisure: "" });
-  const [newTaskTimes, setNewTaskTimes] = useState<Record<TaskCategory, number>>({ work: 15, personal: 15, leisure: 15 });
-  const [newTaskPriorities, setNewTaskPriorities] = useState<Record<TaskCategory, Priority>>({ work: "medium", personal: "medium", leisure: "medium" });
   const [activeId, setActiveId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCategory, setModalCategory] = useState<TaskCategory>("work");

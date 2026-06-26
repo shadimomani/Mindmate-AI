@@ -3,10 +3,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
 import {
   Calendar,
   ChevronRight,
@@ -14,7 +13,6 @@ import {
   Sparkles,
   CheckCircle2,
   Circle,
-  Loader2,
   CalendarDays,
   Target,
   MessageSquareText,
@@ -111,7 +109,7 @@ export const WeeklyPlanner = () => {
   const [brainDump, setBrainDump] = useState("");
   const [reflectionCompletion, setReflectionCompletion] = useState<string>("");
   const [reflectionDifficulty, setReflectionDifficulty] = useState("");
-  const [generating, setGenerating] = useState(false);
+  const [, setGenerating] = useState(false);
   const [plan, setPlan] = useState<WeeklyPlan | null>(null);
   const [savedPlan, setSavedPlan] = useState<SavedPlan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,9 +130,9 @@ export const WeeklyPlanner = () => {
       else if (dayOfWeek === 6) monday.setDate(now.getDate() + 2);
       else monday.setDate(now.getDate() - (dayOfWeek - 1));
 
-      // Use local date to avoid UTC timezone mismatch
+      // Local date helper retained for future weekStart lookups; current query uses status.
       const pad = (n: number) => String(n).padStart(2, "0");
-      const weekStartStr = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
+      void pad;
 
       // Try current week first, then also check if there's an active plan nearby
       const { data } = await supabase

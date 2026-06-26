@@ -21,7 +21,7 @@ function Particles({
   const pointsRef = useRef<THREE.Points>(null!);
   const linesRef = useRef<THREE.LineSegments>(null!);
   const mouseRef = useRef(new THREE.Vector2(0, 0));
-  const { size, viewport } = useThree();
+  const { viewport } = useThree();
 
   const { positions, velocities } = useMemo(() => {
     const pos = new Float32Array(count * 3);

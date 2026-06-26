@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Download, Upload, Shield, FileJson, FileSpreadsheet, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -142,7 +141,7 @@ export function DataManagement() {
       }
 
       toast({ title: "Import complete", description: `${imported} items restored successfully.` });
-    } catch (err) {
+    } catch {
       toast({ title: "Import failed", description: "The file could not be read or is corrupted.", variant: "destructive" });
     } finally {
       setImporting(false);

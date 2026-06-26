@@ -6,7 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Briefcase, Heart, Sparkles, Clock, Repeat } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 type TaskCategory = "work" | "personal" | "leisure";
 type Priority = "high" | "medium" | "low";

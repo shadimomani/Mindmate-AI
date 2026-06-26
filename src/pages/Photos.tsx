@@ -93,7 +93,7 @@ const Photos = () => {
         });
 
         if (dbError) throw dbError;
-      } catch (error) {
+      } catch {
         toast({
           title: 'Upload Error',
           description: `Failed to upload ${file.name}`,
@@ -132,7 +132,7 @@ const Photos = () => {
         title: 'Success',
         description: 'Photo removed',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to remove photo',

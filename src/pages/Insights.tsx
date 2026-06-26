@@ -11,74 +11,21 @@ import {
   Sparkles,
   Brain,
   TrendingUp,
-  TrendingDown,
   Clock,
   Target,
   AlertTriangle,
-  Briefcase,
-  Heart,
-  Coffee,
   Loader2,
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { InsightsScene } from "@/components/three/scenes/InsightsScene";
 import { cn } from "@/lib/utils";
-
-type Domain = "work" | "personal" | "leisure";
+import { DOMAIN_META, SIGNAL_COPY, formatHour, type Domain } from "./insights/constants";
+import { StatTile, HoursTile, Chip } from "./insights/Tiles";
 
 interface TaskRow {
   completed: boolean;
   created_at: string;
   category: string | null;
-}
-
-const DOMAIN_META: Record<
-  Domain,
-  { label: { en: string; ar: string }; icon: typeof Briefcase; varName: string }
-> = {
-  work: { label: { en: "Work", ar: "العمل" }, icon: Briefcase, varName: "--section-work" },
-  personal: { label: { en: "Life", ar: "الحياة" }, icon: Heart, varName: "--section-personal" },
-  leisure: { label: { en: "Balance", ar: "التوازن" }, icon: Coffee, varName: "--section-leisure" },
-};
-
-const SIGNAL_COPY: Record<string, { en: { t: string; d: string }; ar: { t: string; d: string }; icon: typeof Brain }> = {
-  overplanning_detected: {
-    en: { t: "Overplanning", d: "You plan more than you finish. AI will suggest fewer tasks." },
-    ar: { t: "إفراط في التخطيط", d: "تخطط لأكثر مما تنجز. سيقترح الذكاء مهامًا أقل." },
-    icon: TrendingDown,
-  },
-  undercommitment_detected: {
-    en: { t: "Room to grow", d: "You're finishing everything easily — try a stretch goal." },
-    ar: { t: "مساحة للنمو", d: "تنجز كل شيء بسهولة — جرّب هدفًا أكبر." },
-    icon: TrendingUp,
-  },
-  motivation_drop_pattern: {
-    en: { t: "Gentle dip", d: "Completion is dipping. AI will use a softer tone." },
-    ar: { t: "انخفاض لطيف", d: "الإنجاز يتراجع. سيستخدم الذكاء نبرة ألطف." },
-    icon: AlertTriangle,
-  },
-  consistent_time_failure: {
-    en: { t: "Time mismatch", d: "Some hours are tougher. AI will avoid them." },
-    ar: { t: "أوقات صعبة", d: "بعض الساعات أصعب. سيتجنبها الذكاء." },
-    icon: Clock,
-  },
-  task_complexity_too_high: {
-    en: { t: "Too complex", d: "Tasks are heavy. AI will break them down." },
-    ar: { t: "معقد جدًا", d: "المهام ثقيلة. سيقوم الذكاء بتقسيمها." },
-    icon: Target,
-  },
-  optimistic_bias: {
-    en: { t: "Optimistic bias", d: "Predictions are too rosy. AI will calibrate." },
-    ar: { t: "تفاؤل زائد", d: "التوقعات متفائلة. سيعايرها الذكاء." },
-    icon: Brain,
-  },
-};
-
-function formatHour(h: number, lang: "en" | "ar") {
-  if (lang === "ar") return `${h}:00`;
-  if (h === 0) return "12 AM";
-  if (h === 12) return "12 PM";
-  return h < 12 ? `${h} AM` : `${h - 12} PM`;
 }
 
 const Insights = () => {
@@ -464,88 +411,5 @@ const Insights = () => {
     </DashboardLayout>
   );
 };
-
-function StatTile({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color: "primary" | "accent" | "work" | "leisure";
-}) {
-  const colorMap: Record<string, string> = {
-    primary: "var(--primary)",
-    accent: "var(--accent)",
-    work: "var(--section-work)",
-    leisure: "var(--section-leisure)",
-  };
-  const v = colorMap[color];
-  return (
-    <div
-      className="rounded-2xl p-4 border"
-      style={{
-        background: `hsl(${v} / 0.08)`,
-        borderColor: `hsl(${v} / 0.2)`,
-      }}
-    >
-      <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
-        {label}
-      </p>
-      <p className="text-2xl font-bold" style={{ color: `hsl(${v})` }}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function HoursTile({
-  title,
-  hours,
-  tone,
-  lang,
-}: {
-  title: string;
-  hours: number[];
-  tone: "green" | "red";
-  lang: "en" | "ar";
-}) {
-  const toneClass =
-    tone === "green"
-      ? "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400"
-      : "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400";
-  return (
-    <div className={cn("rounded-2xl p-4 border", toneClass)}>
-      <div className="flex items-center gap-2 mb-2">
-        <Clock className="w-4 h-4" />
-        <p className="text-xs font-semibold uppercase tracking-wider">{title}</p>
-      </div>
-      {hours.length > 0 ? (
-        <div className="flex flex-wrap gap-1">
-          {hours.map((h) => (
-            <span
-              key={h}
-              className="text-xs font-medium px-2 py-0.5 rounded-md bg-background/60"
-            >
-              {formatHour(h, lang)}
-            </span>
-          ))}
-        </div>
-      ) : (
-        <p className="text-xs opacity-70">
-          {lang === "ar" ? "لا توجد بيانات كافية" : "Not enough data yet"}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function Chip({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-xs font-medium px-3 py-1.5 rounded-full bg-muted text-foreground border border-border">
-      {children}
-    </span>
-  );
-}
 
 export default Insights;
