@@ -7,7 +7,7 @@ interface SEOProps {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const SITE_URL = "https://sage-mind-assistant.lovable.app";
+const SITE_URL = "https://mindmate-assestant.lovable.app";
 
 export const SEO = ({ title, description, path = "/", jsonLd }: SEOProps) => {
   const url = `${SITE_URL}${path}`;
