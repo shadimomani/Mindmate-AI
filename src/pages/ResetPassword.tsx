@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
+import { SEO } from '@/components/SEO';
 
 const passwordSchema = z.string()
   .min(8, 'Password must be at least 8 characters')
@@ -58,6 +59,11 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
+      <SEO
+        title="Reset your password — MindMate"
+        description="Choose a new password to securely regain access to your MindMate account and pick up your daily plan where you left off."
+        path="/reset-password"
+      />
       <div className="w-full max-w-md bg-card rounded-2xl shadow-soft border border-border p-8">
         <h1 className="text-2xl font-serif font-bold text-foreground mb-2 text-center">Reset password</h1>
         <p className="text-muted-foreground text-center mb-6">Enter your new password below.</p>
